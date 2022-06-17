@@ -5,28 +5,36 @@ require "test_helper"
 class FetcherTest < DatabaseTest
   include Tobox
 
-  def test_fetch_event
+  def test_fetch_events
     # no event, nothing comes out
-    event = fetcher.fetch_event
-    assert event.nil?
+    events = fetcher.fetch_events
+    assert events.empty?
 
     # with event
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar"}))
-    event = fetcher.fetch_event
-    assert !event.nil?
+    events = fetcher.fetch_events
+    assert !events.empty?
+    event = events.first
     assert event[:type] == "event_created"
-    assert event[:data_after] == JSON.dump({ "foo" => "bar" })
-    next_event = fetcher.fetch_event
-    assert next_event.nil?
+    assert event[:after] == { "foo" => "bar" }
+    next_events = fetcher.fetch_events
+    assert next_events.empty?
+
+    # with block
+    db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar"}))
+    return_value = fetcher.fetch_events { |_event| }
+    assert return_value == 1
+    return_value = fetcher.fetch_events { |_event| }
+    assert return_value == 0
 
     # error recovery
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar"}))
 
     transient_error = Class.new(StandardError)
     begin
-      fetcher.fetch_event do |event|
+      fetcher.fetch_events do |event|
         assert event[:type] == "event_created"
-        assert event[:data_after] == JSON.dump({ "foo" => "bar" })
+        assert event[:after] == { "foo" => "bar" }
         assert db[:outbox].count.zero?
 
         raise transient_error, "make it fail"

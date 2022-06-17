@@ -9,17 +9,39 @@ module Tobox
       @pick_next_sql = @ds.select(:id).order(:id).for_update.skip_locked.limit(1)
     end
 
-    def fetch_event
+    def fetch_events
       @db.transaction do
-        event = @ds.where(:id => @pick_next_sql).returning.delete.first
+        events = @ds.where(:id => @pick_next_sql).returning.delete
 
         if block_given?
-          yield event if event
+          events.each do |ev|
+            begin
+              yield(to_message(ev))
+            rescue StandardError => error
+              handle_error(ev, error)
+            end
+          end
+          return events.size
         else
-          return event
+          return events.map(&method(:to_message))
         end
-
       end
+    end
+
+    private
+
+    def to_message(event)
+      {
+        id: event[:id],
+        type: event[:type],
+        before: (JSON.parse(event[:data_before]) if event[:data_before]),
+        after: (JSON.parse(event[:data_after]) if event[:data_after]),
+        at: event[:created_at]
+      }
+    end
+
+    def handle_error(event, error)
+      raise error
     end
   end
 end

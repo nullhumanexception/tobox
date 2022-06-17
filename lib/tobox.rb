@@ -10,3 +10,4 @@ end
 
 require_relative "tobox/configuration"
 require_relative "tobox/fetcher"
+require_relative "tobox/worker"

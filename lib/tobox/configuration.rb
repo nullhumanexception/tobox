@@ -10,7 +10,9 @@ module Tobox
 
     DEFAULT_CONFIGURATION = {
       :database => Sequel::DATABASES.first,
-      :table => :outbox
+      :table => :outbox,
+      :wait_for_events_delay => 5,
+      :message_to_arguments => nil
     }
 
     def initialize(name = nil, &block)

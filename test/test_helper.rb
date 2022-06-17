@@ -2,6 +2,8 @@
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
+require "json"
+require "logger"
 require "sequel"
 
 DB = begin
@@ -66,12 +68,11 @@ DB = begin
 end
 
 require "tobox"
-
 require "minitest/autorun"
-
+require "minitest/hooks"
 
 class DatabaseTest < Minitest::Test
-  private
+  include Minitest::Hooks
 
   def around
     db.transaction(rollback: :always, savepoint: true, auto_savepoint: true) do
