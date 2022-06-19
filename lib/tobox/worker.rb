@@ -17,6 +17,8 @@ module Tobox
     end
 
     def do_work
+      return if @finished
+
       sum_fetched_events = @fetcher.fetch_events do |event|
         event_type = event[:type].to_sym
         event = @message_to_arguments[event] if @message_to_arguments

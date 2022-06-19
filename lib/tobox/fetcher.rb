@@ -1,6 +1,7 @@
 module Tobox
   class Fetcher
     def initialize(configuration)
+      @configuration = configuration
       @db = configuration[:database]
       table = configuration[:table]
 
@@ -41,7 +42,9 @@ module Tobox
     end
 
     def handle_error(event, error)
-      raise error
+      @configuration.lifecycle_events[:error].each do |hd|
+        hd.call(event, error)
+      end
     end
   end
 end

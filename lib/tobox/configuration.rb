@@ -4,20 +4,25 @@ module Tobox
   class Configuration
     extend Forwardable
 
-    attr_reader :handlers
+    attr_reader :handlers, :lifecycle_events
 
     def_delegator :@config, :[]
 
     DEFAULT_CONFIGURATION = {
+      :database_uri => nil,
       :database => Sequel::DATABASES.first,
       :table => :outbox,
       :wait_for_events_delay => 5,
-      :message_to_arguments => nil
+      :shutdown_timeout =>  10,
+      :message_to_arguments => nil,
+      :concurrency => 4, # TODO: CPU count
     }
 
     def initialize(name = nil, &block)
       @name = name
       @config = DEFAULT_CONFIGURATION.dup
+
+      @lifecycle_events = Hash.new { |hs, event| hs[event] = [] }
       @handlers = Hash.new { |hs, event| hs[event] = [] }
       return unless block
 
@@ -33,15 +38,25 @@ module Tobox
       freeze
     end
 
+    def database_uri(uri)
+      super
+      @config[:database] = Sequel.connect(uri.to_s)
+    end
 
     def on(event, &callback)
       @handlers[event.to_sym] << callback
       self
     end
 
+    def handle_lifecycle_event(event, &callback)
+      @lifecycle_events[event.to_sym] << callback
+      self
+    end
+
     def freeze
       @config.each_value(&:freeze).freeze
       @handlers.each_value(&:freeze).freeze
+      @lifecycle_events.each_value(&:freeze).freeze
       super
     end
 

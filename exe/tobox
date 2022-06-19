@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/tobox/cli"
+
+begin
+  Tobox::CLI.run
+rescue => error
+  raise e if $DEBUG
+  warn e.message
+  warn e.backtrace.join("\n")
+  exit 1
+end

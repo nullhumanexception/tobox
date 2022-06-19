@@ -43,6 +43,7 @@ class WorkerTest < DatabaseTest
   def test_do_work_stops_working
     created = []
     configuration = Configuration.new do
+      wait_for_events_delay 1
       on(:event_created) { |msg| created << msg }
     end
     worker = Worker.new(configuration)

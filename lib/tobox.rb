@@ -11,3 +11,5 @@ end
 require_relative "tobox/configuration"
 require_relative "tobox/fetcher"
 require_relative "tobox/worker"
+require_relative "tobox/pool"
+require_relative "tobox/application"

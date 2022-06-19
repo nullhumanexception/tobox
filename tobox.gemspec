@@ -12,18 +12,19 @@ Gem::Specification.new do |spec|
   spec.description = "Transactional outbox pattern implementation in ruby"
   spec.homepage = "https://gitlab.com/honeyryderchuck/tobox"
 
-  spec.metadata["allowed_push_host"] = "https://rubygems.org"
+  spec.metadata = {
+    "homepage_uri" => spec.homepage,
+    "allowed_push_host" => "https://rubygems.org",
+    "source_code_uri" => "https://gitlab.com/honeyryderchuck/tobox",
+    "bug_tracker_uri" => "https://gitlab.com/honeyryderchuck/tobox/issues",
+    "documentation_uri" => "https://gitlab.com/honeyryderchuck/tobox",
+    "changelog_uri" => "https://gitlab.com/honeyryderchuck/tobox/-/blob/master/CHANGELOG.md"
+  }
 
-  spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://gitlab.com/honeyryderchuck/tobox"
-  spec.metadata["changelog_uri"] = "https://gitlab.com/honeyryderchuck/tobox/-/blob/master/CHANGELOG.md"
-
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  spec.files = Dir["LICENSE.txt", "README.md", "lib/**/*.rb", "CHANGELOG.md"]
-  spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  spec.files = Dir["LICENSE.txt", "README.md", "lib/**/*.rb", "exe/**", "CHANGELOG.md"]
+  spec.bindir = "exe"
+  spec.executables = ["tobox"]
 
   spec.add_dependency "sequel", ">= 4.35"
 
