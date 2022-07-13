@@ -20,6 +20,7 @@ module Tobox
               yield(to_message(ev))
             rescue StandardError => error
               handle_error(ev, error)
+              raise Sequel::Rollback
             end
           end
           return events.size
