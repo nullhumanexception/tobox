@@ -12,6 +12,7 @@ module Tobox
       @workers.each(&:finish!)
     end
   end
-end
 
-require_relative "pool/threaded_pool"
+  autoload :ThreadedPool, File.join(__dir__, "pool", "threaded_pool")
+  autoload :FiberPool, File.join(__dir__, "pool", "fiber_pool")
+end

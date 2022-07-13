@@ -12,6 +12,11 @@ gem "minitest-hooks"
 
 gem "rubocop", "~> 1.21"
 
+if RUBY_VERSION >= "3.1.0"
+  gem "fiber_scheduler"
+  gem "debug"
+end
+
 platform :mri, :truffleruby do
   if RUBY_VERSION < "2.5"
     gem "byebug", "~> 11.0.1"
