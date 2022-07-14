@@ -1,7 +1,7 @@
 
 require "optparse"
 require "uri"
-require_relative "tobox"
+require_relative "../tobox"
 
 module Tobox
   class CLI
@@ -20,6 +20,8 @@ module Tobox
       config = Configuration.new do |c|
         c.instance_eval(File.read(options.fetch(:config_file)), options.fetch(:config_file), 1)
       end
+
+      logger = config[:logger]
 
       # boot
       options.fetch(:require).each(&method(:require))
@@ -46,13 +48,20 @@ module Tobox
       begin
         app.start
 
-        while self_read.wait_readable
-          signal = self_read.gets.strip
+        logger.info "Running tobox-#{Tobox::VERSION} (#{RUBY_DESCRIPTION})"
+        logger.info "workers=#{config[:concurrency]}"
+        logger.info "Press Ctrl-C to stop"
+
+
+        while pipe_read.wait_readable
+          signal = pipe_read.gets.strip
           handle_signal(signal)
         end
 
       rescue Interrupt
+        logger.info "Shutting down..."
         app.stop
+        logger.info "Down!"
         exit(0)
       end
     end
@@ -60,7 +69,9 @@ module Tobox
     private
 
     def parse(args)
-      opts = {}
+      opts = {
+        require: []
+      }
       parser = OptionParser.new { |o|
 
         o.on "-C", "--config PATH", "path to tobox .rb config file" do |arg|
@@ -81,8 +92,8 @@ module Tobox
           end
         end
 
-        o.on "-d", "--database-uri DATABASE_URI", URI, "location of the database with the outbox table" do |arg|
-          opts[:database_uri] = arg
+        o.on "-d", "--database-uri DATABASE_URI", String, "location of the database with the outbox table" do |arg|
+          opts[:database_uri] = URI(arg)
         end
 
         o.on "-t", "--table TABLENAME", "(optional) name of the outbox database table" do |arg|

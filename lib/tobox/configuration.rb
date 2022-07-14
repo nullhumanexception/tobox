@@ -1,4 +1,5 @@
 require "forwardable"
+require "logger"
 
 module Tobox
   class Configuration
@@ -16,6 +17,7 @@ module Tobox
       :shutdown_timeout =>  10,
       :message_to_arguments => nil,
       :concurrency => 4, # TODO: CPU count
+      :logger => Logger.new(STDERR)
     }
 
     def initialize(name = nil, &block)
