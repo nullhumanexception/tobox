@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Tobox
   class Fetcher
     def initialize(configuration)
@@ -19,21 +21,17 @@ module Tobox
 
     def fetch_events
       @db.transaction do
-        events = @ds.where(:id => @pick_next_sql).returning.delete
+        events = @ds.where(id: @pick_next_sql).returning.delete
 
-        if block_given?
-          events.each do |ev|
-            begin
-              yield(to_message(ev))
-            rescue StandardError => error
-              handle_error(ev, error)
-              raise Sequel::Rollback
-            end
-          end
-          return events.size
-        else
-          return events.map(&method(:to_message))
+        return events.map(&method(:to_message)) unless block_given?
+
+        events.each do |ev|
+          yield(to_message(ev))
+        rescue StandardError => e
+          handle_error(ev, e)
+          raise Sequel::Rollback
         end
+        return events.size
       end
     end
 

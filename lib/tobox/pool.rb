@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 module Tobox
   class Pool
-
     def initialize(configuration)
       @configuration = configuration
       @num_workers = configuration[:concurrency]

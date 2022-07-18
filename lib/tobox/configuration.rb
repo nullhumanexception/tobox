@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "forwardable"
 
 module Tobox
@@ -9,13 +11,13 @@ module Tobox
     def_delegator :@config, :[]
 
     DEFAULT_CONFIGURATION = {
-      :database_uri => nil,
-      :table => :outbox,
-      :wait_for_events_delay => 5,
-      :shutdown_timeout =>  10,
-      :message_to_arguments => nil,
-      :concurrency => 4, # TODO: CPU count
-    }
+      database_uri: nil,
+      table: :outbox,
+      wait_for_events_delay: 5,
+      shutdown_timeout: 10,
+      message_to_arguments: nil,
+      concurrency: 4 # TODO: CPU count
+    }.freeze
 
     def initialize(name = nil, &block)
       @name = name
@@ -38,12 +40,12 @@ module Tobox
     end
 
     def on(event, &callback)
-      @handlers[event.to_sym] << callback
+      (@handlers[event.to_sym] ||= []) << callback
       self
     end
 
     def handle_lifecycle_event(event, &callback)
-      @lifecycle_events[event.to_sym] << callback
+      (@lifecycle_events[event.to_sym] ||= []) << callback
       self
     end
 
@@ -60,11 +62,17 @@ module Tobox
     def method_missing(meth, *args, &block)
       if DEFAULT_CONFIGURATION.key?(meth) && args.size == 1
         @config[meth] = args.first
-      elsif /\Aon\_(.*)\z/.match(meth) && args.size == 0
-        on($1.to_sym, &block)
+      elsif /\Aon_(.*)\z/.match(meth) && args.size.zero?
+        on(Regexp.last_match(1).to_sym, &block)
       else
         super
       end
+    end
+
+    def respond_to_missing?(meth, *args)
+      super(meth, *args) ||
+        DEFAULT_CONFIGURATION.key?(meth) ||
+        /\Aon_(.*)\z/.match(meth)
     end
   end
 end

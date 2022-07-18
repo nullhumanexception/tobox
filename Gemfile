@@ -5,19 +5,24 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in tobox.gemspec
 gemspec
 
+# gem "sequel", path: "../sequel"
 gem "rake", "~> 13.0"
 
 gem "minitest"
 gem "minitest-hooks"
-
-gem "rubocop", "~> 1.21"
+gem "rubocop"
 
 if RUBY_VERSION >= "3.1.0"
-  gem "fiber_scheduler"
   gem "debug"
+  gem "fiber_scheduler"
 end
 
 platform :mri, :truffleruby do
+  if RUBY_VERSION >= "3.0.0"
+    gem "rbs"
+    gem "steep"
+  end
+
   if RUBY_VERSION < "2.5"
     gem "byebug", "~> 11.0.1"
     gem "pry-byebug", "~> 3.7.0"

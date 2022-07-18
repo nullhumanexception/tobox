@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 module Tobox
   class Application
-
     def initialize(configuration)
       @configuration = configuration
       @running = false

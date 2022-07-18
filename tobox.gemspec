@@ -18,8 +18,10 @@ Gem::Specification.new do |spec|
     "source_code_uri" => "https://gitlab.com/honeyryderchuck/tobox",
     "bug_tracker_uri" => "https://gitlab.com/honeyryderchuck/tobox/issues",
     "documentation_uri" => "https://gitlab.com/honeyryderchuck/tobox",
-    "changelog_uri" => "https://gitlab.com/honeyryderchuck/tobox/-/blob/master/CHANGELOG.md"
+    "changelog_uri" => "https://gitlab.com/honeyryderchuck/tobox/-/blob/master/CHANGELOG.md",
+    "rubygems_mfa_required" => "true"
   }
+  spec.required_ruby_version = ">= 2.7.0"
 
   spec.require_paths = ["lib"]
   spec.files = Dir["LICENSE.txt", "README.md", "lib/**/*.rb", "exe/**", "CHANGELOG.md"]

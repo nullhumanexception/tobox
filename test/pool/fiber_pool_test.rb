@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 return unless ENV["ENABLE_FIBER_POOL_TESTS"]
 
 require "test_helper"

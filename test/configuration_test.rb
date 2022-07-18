@@ -24,11 +24,11 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_handlers
-    conf = Configuration.new {
+    conf = Configuration.new do
       on(:resource_created) { 1 }
       on(:resource_created) { 2 }
       on(:resource_updated) { 3 }
-    }
+    end
     assert conf.handlers.size == 2
     assert conf.handlers[:resource_created].size == 2
     assert conf.handlers[:resource_updated].size == 1

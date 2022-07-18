@@ -5,8 +5,9 @@ require_relative "../lib/tobox/cli"
 
 begin
   Tobox::CLI.run
-rescue => error
+rescue StandardError => e
   raise e if $DEBUG
+
   warn e.message
   warn e.backtrace.join("\n")
   exit 1

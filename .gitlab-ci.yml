@@ -1,9 +1,136 @@
-image: ruby:3.0.3
+# Cache gems in between builds
+stages:
+  - build
+  - test
+  - prepare
+  - deploy
 
-before_script:
-  - gem install bundler -v 2.2.32
+key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+  paths:
+    - vendor
+
+.install_deps: &install_deps
+  - apt-get update && apt-get install -y postgresql-client libpq-dev
+
+.test: &test
+  - "DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake test"
+
+.test_services: &test_services
+ services:
+    -
+      name: postgres:13
+      alias: postgres
+      # entrypoint: ["/usr/local/bin/db-postgres"]
+
+.before_script: &before_script
+  # rails 5.1 and lower need older version of bundler
   - bundle install
 
-example_job:
+variables:
+  BUNDLE_JOBS: 10
+  BUNDLE_PATH: vendor
+  CI: 1
+  PARALLEL: 1
+  # Postgres
+  POSTGRES_DB: tobox
+  POSTGRES_USER: tobox
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST_AUTH_METHOD: trust
+
+jruby:
+  <<: *test_services
+  cache:
+    paths:
+      - vendor/jruby
+  allow_failure: true
+  variables:
+    JRUBY_OPTS: --debug
+  before_script:
+  <<: *test_services
+    - *before_script
+  <<: *test_services
+  image: "jruby:9.3"
   script:
-    - bundle exec rake
+    - bundle exec rake test
+  artifacts:
+    paths:
+      - "coverage/"
+truffleruby:
+  <<: *test_services
+  allow_failure: true
+  before_script:
+  <<: *test_services
+    - *before_script
+  <<: *test_services
+  image: "ghcr.io/graalvm/truffleruby:latest"
+  script:
+    - bundle exec rake test
+  artifacts:
+    paths:
+      - "coverage/"
+ruby27:
+  <<: *test_services
+  before_script:
+  <<: *test_services
+    - *before_script
+  <<: *test_services
+  image: "ruby:2.7"
+  script:
+    - bundle exec rake test
+  artifacts:
+    paths:
+      - "coverage/"
+ruby30:
+  <<: *test_services
+  before_script:
+  <<: *test_services
+    - *before_script
+  <<: *test_services
+  image: "ruby:2.7"
+  script:
+    - bundle exec rake test
+  only:
+    - master
+  artifacts:
+    paths:
+      - "coverage/"
+ruby31:
+  <<: *test_services
+  before_script:
+  <<: *test_services
+    - *before_script
+  <<: *test_services
+  image: "ruby:3.1"
+  script:
+    - bundle exec rake test
+    - bundle exec rake rubocop
+  artifacts:
+    paths:
+      - "coverage/"
+
+coverage:
+  stage: prepare
+  coverage: '/\(\d+.\d+%\) covered/'
+  before_script:
+    - gem install simplecov --no-doc
+  dependencies:
+    - jruby
+    - truffleruby
+    - ruby27
+    - ruby31
+  image: "ruby:3.1"
+  script:
+    # this is a workaround, because simplecov doesn't support relative paths.
+    #
+    # https://github.com/simplecov-ruby/simplecov/issues/887
+    #
+    # this is necessary in our case, because coverage files are generated inside
+    # the custom docker container, which runs in /home, and the absolute paths aren't
+    # gonna match the paths where the files are, once we merge them. Therefore,
+    # all of those have to be rewritten before the merge happens.
+    #
+    - find coverage -name "*resultset.json" -exec sed -i 's?/home?'`pwd`'?' {} \;
+    - rake coverage:report
+  artifacts:
+    paths:
+      - "coverage/"

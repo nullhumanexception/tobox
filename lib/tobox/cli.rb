@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require "logger"
 require "optparse"
@@ -6,7 +7,6 @@ require_relative "../tobox"
 
 module Tobox
   class CLI
-
     def self.run(args = ARGV)
       new(args).run
     end
@@ -22,7 +22,7 @@ module Tobox
         c.instance_eval(File.read(options.fetch(:config_file)), options.fetch(:config_file), 1)
       end
 
-      logger = Logger.new(STDERR)
+      logger = Logger.new($stderr)
 
       # boot
       options.fetch(:require).each(&method(:require))
@@ -34,8 +34,8 @@ module Tobox
           if old_handler.respond_to?(:call)
             begin
               old_handler.call
-            rescue Exception => exc
-              puts ["Error in #{sig} handler", exc].inspect
+            rescue Exception => e # rubocop:disable Lint/RescueException
+              puts ["Error in #{sig} handler", e].inspect
             end
           end
           pipe_write.puts(sig)
@@ -53,12 +53,10 @@ module Tobox
         logger.info "workers=#{config[:concurrency]}"
         logger.info "Press Ctrl-C to stop"
 
-
         while pipe_read.wait_readable
           signal = pipe_read.gets.strip
           handle_signal(signal)
         end
-
       rescue Interrupt
         logger.info "Shutting down..."
         app.stop
@@ -73,13 +71,11 @@ module Tobox
       opts = {
         require: []
       }
-      parser = OptionParser.new { |o|
-
+      parser = OptionParser.new do |o|
         o.on "-C", "--config PATH", "path to tobox .rb config file" do |arg|
-          if File.directory?(arg)
-            arg = File.join(arg, "tobox.rb")
-          end
-          raise ArgumentError, "no such file #{arg}" unless File.exists?(arg)
+          arg = File.join(arg, "tobox.rb") if File.directory?(arg)
+          raise ArgumentError, "no such file #{arg}" unless File.exist?(arg)
+
           opts[:config_file] = arg
         end
 
@@ -88,7 +84,8 @@ module Tobox
           if File.directory?(arg)
             requires.concat(Dir.glob(File.join("**", "*.rb")))
           else
-            raise ArgumentError, "no such file #{arg}" unless File.exists?(arg)
+            raise ArgumentError, "no such file #{arg}" unless File.exist?(arg)
+
             requires << arg
           end
         end
@@ -102,7 +99,8 @@ module Tobox
         end
 
         o.on "-c", "--concurrency INT", Integer, "processor threads to use" do |arg|
-          raise ArgumentError, "must be positive" unless arg > 0
+          raise ArgumentError, "must be positive" unless arg.positive?
+
           opts[:concurrency] = arg
         end
 
@@ -111,7 +109,8 @@ module Tobox
         end
 
         o.on "-t", "--shutdown-timeout NUM", Integer, "Shutdown timeout (in seconds)" do |arg|
-          raise ArgumentError, "must be positive" unless arg > 0
+          raise ArgumentError, "must be positive" unless arg.positive?
+
           opts[:shutdown_timeout] = arg
         end
 
@@ -119,15 +118,15 @@ module Tobox
           opts[:verbose] = arg
         end
 
-        o.on "-v", "--version", "Print version and exit" do |arg|
+        o.on "-v", "--version", "Print version and exit" do |_arg|
           puts "Tobox #{Tobox::VERSION}"
           exit(0)
         end
-      }
+      end
 
       parser.banner = "tobox [options]"
       parser.on_tail "-h", "--help", "Show help" do
-        STDOUT.puts parser
+        $stdout.puts parser
         exit(0)
       end
       parser.parse(args)

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module Tobox
   class Worker
     def initialize(configuration)
       @wait_for_events_delay = configuration[:wait_for_events_delay]
       @message_to_arguments = configuration[:message_to_arguments]
-      @handlers = Array(configuration.handlers)
+      @handlers = configuration.handlers || {}
       @fetcher = Fetcher.new(configuration)
       @finished = false
     end
@@ -25,11 +27,11 @@ module Tobox
         event_type = event[:type].to_sym
         event = @message_to_arguments[event] if @message_to_arguments
 
-        @handlers[event_type].each do |handler|
-
-          handler.call(event)
-
-        end if @handlers.key?(event_type)
+        if @handlers.key?(event_type)
+          @handlers[event_type].each do |handler|
+            handler.call(event)
+          end
+        end
       end
 
       return if @finished

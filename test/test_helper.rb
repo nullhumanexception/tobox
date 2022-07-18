@@ -27,18 +27,18 @@ DB = begin
            elsif !ENV["DATABASE_URL"].start_with?("jdbc")
              # AR: postgresql://user:pass@host/db
              # Sequel: jdbc:postgresql://host/db?user=user&password=pass
-             uri = URI.parse(ENV["DATABASE_URL"])
+             uri = URI.parse(ENV.fetch("DATABASE_URL", nil))
              uri.query = "user=#{uri.user}&password=#{uri.password}"
              uri.user = nil
              uri.password = nil
              Sequel.connect("jdbc:#{uri}")
            else
-             Sequel.connect(ENV["DATABASE_URL"])
+             Sequel.connect(ENV.fetch("DATABASE_URL", nil))
            end
          elsif ENV["DATABASE_URL"].match(/sqlite3(.*)/)
            Sequel.connect("sqlite#{Regexp.last_match(1)}")
          else
-           Sequel.connect(ENV["DATABASE_URL"])
+           Sequel.connect(ENV.fetch("DATABASE_URL", nil))
          end
        else
          # psql --username=<admin> -c "CREATE ROLE outbox CREATEDB LOGIN PASSWORD 'password'"
