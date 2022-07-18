@@ -1,4 +1,5 @@
 
+require "logger"
 require "optparse"
 require "uri"
 require_relative "../tobox"
@@ -21,7 +22,7 @@ module Tobox
         c.instance_eval(File.read(options.fetch(:config_file)), options.fetch(:config_file), 1)
       end
 
-      logger = config[:logger]
+      logger = Logger.new(STDERR)
 
       # boot
       options.fetch(:require).each(&method(:require))

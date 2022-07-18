@@ -8,6 +8,7 @@ module Tobox
       def initialize(*)
         Sequel.extension(:fiber_concurrency)
         super
+        @error_handlers = Array(@configuration.lifecycle_events[:error])
       end
 
       def start
@@ -22,9 +23,7 @@ module Tobox
                 rescue KillError
                   # noop
                 rescue Exception => error
-                  puts error
-                  puts @configuration.lifecycle_events[:error]
-                  @configuration.lifecycle_events[:error].each { |hd| hd.call(:tobox_error, error) }
+                  @error_handlers.each { |hd| hd.call(:tobox_error, error) }
                   raise error
                 end
               end

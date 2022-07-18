@@ -3,7 +3,7 @@ module Tobox
     def initialize(configuration)
       @wait_for_events_delay = configuration[:wait_for_events_delay]
       @message_to_arguments = configuration[:message_to_arguments]
-      @handlers = configuration.handlers
+      @handlers = Array(configuration.handlers)
       @fetcher = Fetcher.new(configuration)
       @finished = false
     end
@@ -15,6 +15,8 @@ module Tobox
     def work
       do_work until @finished
     end
+
+    private
 
     def do_work
       return if @finished

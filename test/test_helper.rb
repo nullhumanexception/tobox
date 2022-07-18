@@ -43,7 +43,7 @@ DB = begin
        else
          # psql --username=<admin> -c "CREATE ROLE outbox CREATEDB LOGIN PASSWORD 'password'"
          # PGPASSWORD="password" createdb -Uoutbox outbox_test
-         Sequel.postgres("outbox_test", user: "outbox", password: "password")
+         Sequel.connect("postgres://outbox:password@localhost/outbox_test")
        end
   # seeing weird pool timeout errors from sequel, only in CI
   ENV.delete("PARALLEL") if RUBY_ENGINE == "truffleruby"

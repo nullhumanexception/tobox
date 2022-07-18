@@ -1,5 +1,4 @@
 require "forwardable"
-require "logger"
 
 module Tobox
   class Configuration
@@ -11,21 +10,19 @@ module Tobox
 
     DEFAULT_CONFIGURATION = {
       :database_uri => nil,
-      :database => Sequel::DATABASES.first,
       :table => :outbox,
       :wait_for_events_delay => 5,
       :shutdown_timeout =>  10,
       :message_to_arguments => nil,
       :concurrency => 4, # TODO: CPU count
-      :logger => Logger.new(STDERR)
     }
 
     def initialize(name = nil, &block)
       @name = name
       @config = DEFAULT_CONFIGURATION.dup
 
-      @lifecycle_events = Hash.new { |hs, event| hs[event] = [] }
-      @handlers = Hash.new { |hs, event| hs[event] = [] }
+      @lifecycle_events = {}
+      @handlers = {}
       return unless block
 
       case block.arity
@@ -40,11 +37,6 @@ module Tobox
       freeze
     end
 
-    def database_uri(uri)
-      super
-      @config[:database] = Sequel.connect(uri.to_s)
-    end
-
     def on(event, &callback)
       @handlers[event.to_sym] << callback
       self
@@ -56,6 +48,7 @@ module Tobox
     end
 
     def freeze
+      @name.freeze
       @config.each_value(&:freeze).freeze
       @handlers.each_value(&:freeze).freeze
       @lifecycle_events.each_value(&:freeze).freeze

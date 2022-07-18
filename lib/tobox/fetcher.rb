@@ -2,12 +2,19 @@ module Tobox
   class Fetcher
     def initialize(configuration)
       @configuration = configuration
-      @db = configuration[:database]
+
+      database_uri = @configuration[:database_uri]
+      @db = database_uri ? Sequel.connect(database_uri.to_s) : Sequel::DATABASES.first
+
+      raise Error, "no database found" unless @db
+
       table = configuration[:table]
 
       @ds = @db[table]
 
       @pick_next_sql = @ds.select(:id).order(:id).for_update.skip_locked.limit(1)
+
+      @error_handlers = Array(@configuration.lifecycle_events[:error])
     end
 
     def fetch_events
@@ -43,7 +50,7 @@ module Tobox
     end
 
     def handle_error(event, error)
-      @configuration.lifecycle_events[:error].each do |hd|
+      @error_handlers.each do |hd|
         hd.call(event, error)
       end
     end
