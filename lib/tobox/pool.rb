@@ -15,4 +15,5 @@ module Tobox
 
   autoload :ThreadedPool, File.join(__dir__, "pool", "threaded_pool")
   autoload :FiberPool, File.join(__dir__, "pool", "fiber_pool")
+  autoload :RactorPool, File.join(__dir__, "pool", "ractor_pool")
 end
