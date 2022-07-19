@@ -9,8 +9,11 @@ Rake::TestTask.new(:test) do |t|
   t.test_files = FileList["test/**/*_test.rb"]
 end
 
-require "rubocop/rake_task"
-
-RuboCop::RakeTask.new
+begin
+  require "rubocop/rake_task"
+  desc "Run rubocop"
+  RuboCop::RakeTask.new(:rubocop)
+rescue LoadError
+end
 
 task default: %i[test]

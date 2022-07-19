@@ -13,7 +13,7 @@ class ThreadedPoolTest < Minitest::Test
 
     threads = pool.instance_variable_get(:@threads)
     assert threads.size == 2
-    assert(threads.all? { |th| th.is_a?(Thread) })
+    assert(threads.all?(Thread))
   end
 
   def test_pool_stop

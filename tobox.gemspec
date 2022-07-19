@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     "changelog_uri" => "https://gitlab.com/honeyryderchuck/tobox/-/blob/master/CHANGELOG.md",
     "rubygems_mfa_required" => "true"
   }
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = ">= 2.6.0"
 
   spec.require_paths = ["lib"]
   spec.files = Dir["LICENSE.txt", "README.md", "lib/**/*.rb", "exe/**", "CHANGELOG.md"]

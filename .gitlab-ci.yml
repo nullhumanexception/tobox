@@ -59,9 +59,20 @@ truffleruby:
   <<: *test_services
   allow_failure: true
   before_script:
-    - *install_deps
+    - dnf install -y git postgresql-devel
     - *before_script
   image: "ghcr.io/graalvm/truffleruby:latest"
+  script:
+    - *test
+  artifacts:
+    paths:
+      - "coverage/"
+ruby26:
+  <<: *test_services
+  before_script:
+    - *install_deps
+    - *before_script
+  image: "ruby:2.6"
   script:
     - *test
   artifacts:
@@ -72,9 +83,11 @@ ruby27:
   before_script:
     - *install_deps
     - *before_script
-  image: "ruby:2.7"
+  image: "ruby:2.6"
   script:
     - *test
+  only:
+    - master
   artifacts:
     paths:
       - "coverage/"
@@ -112,7 +125,7 @@ coverage:
   dependencies:
     - jruby
     - truffleruby
-    - ruby27
+    - ruby26
     - ruby31
   image: "ruby:3.1"
   script:

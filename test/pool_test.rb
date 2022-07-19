@@ -12,7 +12,7 @@ class PoolTest < Minitest::Test
 
     workers = pool.instance_variable_get(:@workers)
     assert workers.size == 2
-    assert(workers.all? { |wk| wk.is_a?(Worker) })
+    assert(workers.all?(Worker))
   end
 
   def test_pool_stop

@@ -31,7 +31,7 @@ module Tobox
       when 0
         instance_exec(&block)
       when 1
-        block.call(self)
+        yield(self)
       else
         raise Error, "configuration does not support blocks with more than one variable"
       end

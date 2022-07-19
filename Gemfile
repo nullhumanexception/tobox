@@ -10,7 +10,9 @@ gem "rake", "~> 13.0"
 
 gem "minitest"
 gem "minitest-hooks"
-gem "rubocop"
+gem "rubocop", require: false
+gem 'rubocop-rubycw', require: false
+gem "rubocop-performance", require: false
 
 if RUBY_VERSION >= "3.1.0"
   gem "debug"
@@ -29,8 +31,7 @@ platform :mri, :truffleruby do
   else
     gem "pry-byebug"
   end
-  gem "sqlite3"
-
-  gem "mysql2"
+  # gem "sqlite3"
+  # gem "mysql2"
   gem "pg"
 end

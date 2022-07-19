@@ -13,14 +13,14 @@ DB = begin
            # by Rails, but it's incompatible with sequel, which follows the standards of JDBC.
            #
            # for this reason, sequel is initiated by parsing out the correct URI from the env var.
-           if ENV["DATABASE_URL"].match(/sqlite3(.*)/)
+           if ENV.fetch("DATABASE_URL", nil) =~ /sqlite3(.*)/
              # AR: sqlite3::memory:
              # Sequel: jdbc:sqlite::memory:
              # can't test jruby sqlite in parallel mode
              # https://stackoverflow.com/questions/10707434/sqlite-in-a-multithreaded-java-application
              ENV.delete("PARALLEL")
              Sequel.connect("jdbc:sqlite#{Regexp.last_match(1)}")
-           elsif ENV["DATABASE_URL"].match(/mysql(.*)/)
+           elsif ENV.fetch("DATABASE_URL", nil) =~ /mysql(.*)/
              # AR: mysql://user:pass@host/db
              # Sequel: jdbc:mysql://user:pass@host/db
              Sequel.connect("jdbc:mysql#{Regexp.last_match(1)}")
@@ -35,7 +35,7 @@ DB = begin
            else
              Sequel.connect(ENV.fetch("DATABASE_URL", nil))
            end
-         elsif ENV["DATABASE_URL"].match(/sqlite3(.*)/)
+         elsif ENV.fetch("DATABASE_URL", nil) =~ /sqlite3(.*)/
            Sequel.connect("sqlite#{Regexp.last_match(1)}")
          else
            Sequel.connect(ENV.fetch("DATABASE_URL", nil))

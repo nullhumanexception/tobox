@@ -1,5 +1,7 @@
+require: rubocop-performance
+
 AllCops:
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 2.6
   NewCops: enable
   Include:
     - lib/**/*.rb
@@ -43,4 +45,7 @@ Layout/LineLength:
   Max: 120
 
 Lint/EmptyBlock:
+  Enabled: false
+
+Performance/MethodObjectAsBlock:
   Enabled: false
