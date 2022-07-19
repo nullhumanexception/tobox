@@ -12,13 +12,13 @@ class WorkerTest < DatabaseTest
     # checks it sleeps on it
     time_now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     worker.send(:do_work)
-    assert_in_delta(Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_now, 2, 0.1)
+    assert_in_delta(Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_now, 2, 0.5)
 
     # checks it doesn't sleep on it
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
     time_now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     worker.send(:do_work)
-    assert_in_delta(Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_now, 0, 0.1)
+    assert_in_delta(Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_now, 0, 0.5)
   end
 
   def test_do_work_calls_right_callback

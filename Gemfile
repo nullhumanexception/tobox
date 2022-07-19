@@ -35,3 +35,10 @@ platform :mri, :truffleruby do
   # gem "mysql2"
   gem "pg"
 end
+
+platform :jruby do
+  gem "activerecord-jdbc-adapter"
+  gem "jdbc-postgres"
+  # gem "jdbc-mysql"
+  # gem "jdbc-sqlite3"
+end
