@@ -37,7 +37,7 @@ platform :mri, :truffleruby do
 end
 
 platform :jruby do
-  gem "activerecord-jdbc-adapter"
+  # gem "activerecord-jdbc-adapter"
   gem "jdbc-postgres"
   # gem "jdbc-mysql"
   # gem "jdbc-sqlite3"

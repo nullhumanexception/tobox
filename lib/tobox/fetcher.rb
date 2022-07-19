@@ -41,8 +41,8 @@ module Tobox
       {
         id: event[:id],
         type: event[:type],
-        before: (JSON.parse(event[:data_before]) if event[:data_before]),
-        after: (JSON.parse(event[:data_after]) if event[:data_after]),
+        before: (JSON.parse(event[:data_before].to_s) if event[:data_before]),
+        after: (JSON.parse(event[:data_after].to_s) if event[:data_after]),
         at: event[:created_at]
       }
     end

@@ -43,7 +43,15 @@ DB = begin
        else
          # psql --username=<admin> -c "CREATE ROLE outbox CREATEDB LOGIN PASSWORD 'password'"
          # PGPASSWORD="password" createdb -Uoutbox outbox_test
-         Sequel.connect("postgres://outbox:password@localhost/outbox_test")
+         db_uri = "postgresql://outbox:password@localhost/outbox_test"
+         if RUBY_ENGINE == "jruby"
+           uri = URI.parse(db_uri)
+           uri.query = "user=#{uri.user}&password=#{uri.password}"
+           uri.user = nil
+           uri.password = nil
+           db_uri = "jdbc:#{uri}"
+         end
+         Sequel.connect(db_uri)
        end
   # seeing weird pool timeout errors from sequel, only in CI
   ENV.delete("PARALLEL") if RUBY_ENGINE == "truffleruby"
