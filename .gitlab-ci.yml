@@ -5,7 +5,8 @@ stages:
   - prepare
   - deploy
 
-key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+cache:
+  key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
   paths:
     - vendor
 
@@ -13,10 +14,10 @@ key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
   - apt-get update && apt-get install -y postgresql-client libpq-dev
 
 .test: &test
-  - "DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake test"
+- "DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake test"
 
 .test_services: &test_services
- services:
+  services:
     -
       name: postgres:13
       alias: postgres
@@ -46,9 +47,8 @@ jruby:
   variables:
     JRUBY_OPTS: --debug
   before_script:
-  <<: *test_services
+    - *install_deps
     - *before_script
-  <<: *test_services
   image: "jruby:9.3"
   script:
     - bundle exec rake test
@@ -59,9 +59,8 @@ truffleruby:
   <<: *test_services
   allow_failure: true
   before_script:
-  <<: *test_services
+    - *install_deps
     - *before_script
-  <<: *test_services
   image: "ghcr.io/graalvm/truffleruby:latest"
   script:
     - bundle exec rake test
@@ -71,9 +70,8 @@ truffleruby:
 ruby27:
   <<: *test_services
   before_script:
-  <<: *test_services
+    - *install_deps
     - *before_script
-  <<: *test_services
   image: "ruby:2.7"
   script:
     - bundle exec rake test
@@ -83,9 +81,8 @@ ruby27:
 ruby30:
   <<: *test_services
   before_script:
-  <<: *test_services
+    - *install_deps
     - *before_script
-  <<: *test_services
   image: "ruby:2.7"
   script:
     - bundle exec rake test
@@ -97,9 +94,8 @@ ruby30:
 ruby31:
   <<: *test_services
   before_script:
-  <<: *test_services
+    - *install_deps
     - *before_script
-  <<: *test_services
   image: "ruby:3.1"
   script:
     - bundle exec rake test
