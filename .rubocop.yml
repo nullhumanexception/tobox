@@ -11,6 +11,8 @@ AllCops:
   Exclude:
     - Rakefile
     - examples/**/*.rb
+    - .bundle/**/*
+    - vendor/**/*
 
 Style/StringLiterals:
   Enabled: true
