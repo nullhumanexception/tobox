@@ -11,8 +11,8 @@ gem "rake", "~> 13.0"
 gem "minitest"
 gem "minitest-hooks"
 gem "rubocop", require: false
-gem 'rubocop-rubycw', require: false
 gem "rubocop-performance", require: false
+gem "rubocop-rubycw", require: false
 
 if RUBY_VERSION >= "3.1.0"
   gem "debug"
