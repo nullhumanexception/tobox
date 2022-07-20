@@ -13,6 +13,7 @@ gem "minitest-hooks"
 gem "rubocop", require: false
 gem "rubocop-performance", require: false
 gem "rubocop-rubycw", require: false
+gem "simplecov", require: false
 
 if RUBY_VERSION >= "3.1.0"
   gem "debug"
