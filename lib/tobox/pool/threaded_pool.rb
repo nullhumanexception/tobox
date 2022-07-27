@@ -4,7 +4,7 @@ module Tobox
   class ThreadedPool < Pool
     class KillError < Interrupt; end
 
-    def initialize(*)
+    def initialize(_configuration)
       @threads = []
       super
       @error_handlers = Array(@configuration.lifecycle_events[:error])

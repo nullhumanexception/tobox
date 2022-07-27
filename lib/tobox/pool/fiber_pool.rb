@@ -7,7 +7,7 @@ module Tobox
   class FiberPool < Pool
     class KillError < Interrupt; end
 
-    def initialize(*)
+    def initialize(_configuration)
       Sequel.extension(:fiber_concurrency)
       super
       @error_handlers = Array(@configuration.lifecycle_events[:error])

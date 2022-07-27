@@ -112,6 +112,7 @@ ruby31:
   image: "ruby:3.1"
   script:
     - *test
+    - bundle exec rbs -rforwardable test --target "Tobox*" rake test
     - bundle exec rake rubocop
   artifacts:
     paths:

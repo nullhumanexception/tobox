@@ -10,6 +10,7 @@ AllCops:
     - tobox.gemspec
   Exclude:
     - Rakefile
+    - Steepfile
     - examples/**/*.rb
     - .bundle/**/*
     - vendor/**/*

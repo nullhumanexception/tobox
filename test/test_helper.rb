@@ -4,7 +4,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 if ENV.key?("CI")
   require "simplecov"
-  commands = [RUBY_ENGINE, RUBY_VERSION, ENV.fetch("DATABASE_URL", nil)[%r{(\w+):(//|:)}, 1]].compact
+  commands = [RUBY_ENGINE, RUBY_VERSION, ENV.fetch("DATABASE_URL", "")[%r{(\w+):(//|:)}, 1]].compact
   SimpleCov.command_name commands.join("-")
   SimpleCov.coverage_dir "coverage/#{RUBY_ENGINE}-#{RUBY_VERSION}"
 end
