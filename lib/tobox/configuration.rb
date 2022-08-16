@@ -6,7 +6,7 @@ module Tobox
   class Configuration
     extend Forwardable
 
-    attr_reader :handlers, :lifecycle_events
+    attr_reader :handlers, :lifecycle_events, :arguments_handler
 
     def_delegator :@config, :[]
 
@@ -15,7 +15,6 @@ module Tobox
       table: :outbox,
       wait_for_events_delay: 5,
       shutdown_timeout: 10,
-      message_to_arguments: nil,
       concurrency: 4 # TODO: CPU count
     }.freeze
 
@@ -25,6 +24,7 @@ module Tobox
 
       @lifecycle_events = {}
       @handlers = {}
+      @message_to_arguments = nil
       return unless block
 
       case block.arity
@@ -46,6 +46,11 @@ module Tobox
 
     def handle_lifecycle_event(event, &callback)
       (@lifecycle_events[event.to_sym] ||= []) << callback
+      self
+    end
+
+    def message_to_arguments(&callback)
+      @arguments_handler = callback
       self
     end
 

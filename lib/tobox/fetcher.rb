@@ -22,10 +22,13 @@ module Tobox
     end
 
     def fetch_events
+      num_events = 0
       @db.transaction do
         events = @ds.where(id: @pick_next_sql).returning.delete
 
         return events.map(&method(:to_message)) unless block_given?
+
+        num_events = events.size
 
         events.each do |ev|
           yield(to_message(ev))
@@ -33,8 +36,9 @@ module Tobox
           handle_error(ev, e)
           raise Sequel::Rollback
         end
-        return events.size
       end
+
+      num_events
     end
 
     private

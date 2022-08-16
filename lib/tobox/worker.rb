@@ -4,10 +4,13 @@ module Tobox
   class Worker
     def initialize(configuration)
       @wait_for_events_delay = configuration[:wait_for_events_delay]
-      @message_to_arguments = configuration[:message_to_arguments]
       @handlers = configuration.handlers || {}
       @fetcher = Fetcher.new(configuration)
       @finished = false
+
+      return unless (message_to_arguments = configuration.arguments_handler)
+
+      define_singleton_method(:message_to_arguments, &message_to_arguments)
     end
 
     def finish!
@@ -25,11 +28,11 @@ module Tobox
 
       sum_fetched_events = @fetcher.fetch_events do |event|
         event_type = event[:type].to_sym
-        event = @message_to_arguments[event] if @message_to_arguments
+        args = message_to_arguments(event_type, event[:before], event[:after])
 
         if @handlers.key?(event_type)
           @handlers[event_type].each do |handler|
-            handler.call(event)
+            handler.call(*args)
           end
         end
       end
@@ -37,6 +40,10 @@ module Tobox
       return if @finished
 
       sleep(@wait_for_events_delay) if sum_fetched_events.zero?
+    end
+
+    def message_to_arguments(_event_type, *data)
+      data
     end
   end
 end

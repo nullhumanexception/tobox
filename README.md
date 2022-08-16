@@ -79,10 +79,94 @@ end
 3. Start the `tobox` process
 
 ```
-> bundle exec tobox -C path/to/tobox.rb -r path/to/boot.rb
+> bundle exec tobox -C path/to/tobox.rb -r path/to/file_requiring_application_code.rb
 ```
 
 There is no API for event production yet (still TODO). It's recommended you write directly into the "outbox" table via database triggers (i.e. *insert into users table -> add user_created event"). Alternatively you can use `sequel` directly (`DB[:outbox].insert(...)`).
+
+
+## Configuration
+
+As mentioned above, configuration can be set in a particular file. The following options are configurable:
+
+### `database_uri`
+
+Accepts a URI pointing to a database, [where scheme identifies the database adapter to be used](https://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html):
+
+```ruby
+database_uri `"postgres://user:password@localhost/blog"`.
+```
+
+### `table`
+
+the name of the database table where outbox events are stored (`:outbox` by default).
+
+```ruby
+table :outbox
+```
+
+### `concurrency`
+
+Number of workers processing events.
+
+```ruby
+concurrency 4
+```
+
+**Note**: the default concurrency is adapted and different for each worker pool type, so make sure you understand how this tweak may affect you.
+
+`wait_for_events_delay`
+
+Time (in seconds) to wait before checking again for events in the outbox.
+
+### `shutdown_timeout`
+
+Time (in seconds) to wait for events to finishing processing, before hard-killing the process.
+
+### `on(event_type) { |before, after| }`
+
+callback executed when processing an event of the given type. By default, it'll yield the state of data before and after the event (unless `message_to_arguments` is set).
+
+```ruby
+on(:order_created) { |_, after| puts "order created: #{after}" }
+on(:order_updated) { |_, after| puts "order created: was #{before}, now is #{after}" }
+# ...
+```
+
+
+### `handle_lifecycle_event(smth) { }`
+
+callback executed for certain internal events of the `tobox` process lifecycle, i.e. when an error happens when processing an event (`handle_lifecycle_event(:error) { |exception| }`)
+
+
+```ruby
+on(:error) { |exception| Sentry.capture_exception(exception) }
+```
+
+### `message_to_arguments(event)`
+
+if exposing raw data to the `on` handlers is not what you'd want, you can always override the behaviour by providing an alternative "before/after fetcher" implementation.
+
+```ruby
+# if you'd like to yield the ORM object only
+message_to_arguments do |event_type, before, after|
+case event_type
+when :order_created, :order_updated
+  Order.get(after[:id])
+when :payment_created, :payment_processed, :payment_reconciled
+  Payment.get(after[:id])
+else
+  super(event_type, before, after)
+end
+on(:order_created) { |order| puts "order created: #{order}" }
+# ...
+on(:payment_created) { |payment| puts "payment created: #{payment}" }
+# ...
+```
+
+## Recommendations
+
+
 
 ## Why?
 
