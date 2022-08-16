@@ -24,8 +24,11 @@ class FiberPoolTest < Minitest::Test
     @pool ||= begin
       conf = Configuration.new do |c|
         yield c if block_given?
+        c.worker :fiber
       end
-      FiberPool.new(conf)
+      app = Application.new(conf)
+      app.start
+      app.instance_variable_get(:@pool)
     end
   end
 end

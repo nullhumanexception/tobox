@@ -15,7 +15,8 @@ module Tobox
       table: :outbox,
       wait_for_events_delay: 5,
       shutdown_timeout: 10,
-      concurrency: 4 # TODO: CPU count
+      concurrency: 4, # TODO: CPU count
+      worker: :thread
     }.freeze
 
     def initialize(name = nil, &block)

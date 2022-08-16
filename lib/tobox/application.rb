@@ -10,7 +10,13 @@ module Tobox
     def start
       return if @running
 
-      @pool = ThreadedPool.new(@configuration)
+      worker = @configuration[:worker]
+
+      @pool = case worker
+              when :thread then ThreadedPool
+              when :fiber then FiberPool
+              else worker
+              end.new(@configuration)
 
       @running = true
     end
