@@ -1,0 +1,15 @@
+module Tobox
+  class FiberPool < Pool
+    class KillError < Interrupt
+    end
+
+    @error_handlers: Array[lifecycle_handler]
+    @fiber_thread: Thread
+
+    def initialize: (Configuration configuration) -> void
+
+    def start: () -> untyped
+
+    def stop: () -> untyped
+  end
+end

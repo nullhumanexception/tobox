@@ -1,0 +1,15 @@
+module Tobox
+  class Fetcher
+    @configuration: Configuration
+
+    def initialize: (Configuration configuration) -> void
+
+    def fetch_events: () { (untyped) -> untyped } -> untyped
+
+    private
+
+    def to_message: (untyped event) -> { id: untyped, type: untyped, before: untyped, after: untyped, at: untyped }
+
+    def handle_error: (untyped event, untyped error) -> untyped
+  end
+end

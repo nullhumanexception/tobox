@@ -1,0 +1,21 @@
+module Tobox
+  class Worker
+    @wait_for_events_delay: Integer | Float
+    @message_to_arguments: ^(event event) -> event
+    @handlers: Hash[Symbol, Array[^(event) -> void]]
+    @fetcher: Fetcher
+    @finished: bool
+
+    def initialize: (untyped configuration) -> void
+
+    def finish!: () -> untyped
+
+    def work: () -> untyped
+
+    private
+
+    def do_work: () -> (nil | untyped)
+
+    def message_to_arguments: (event event) -> event
+  end
+end

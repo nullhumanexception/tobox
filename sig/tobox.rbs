@@ -1,0 +1,8 @@
+module Tobox
+  class Error < StandardError
+  end
+
+  type event = Hash[Symbol, untyped]
+  type event_handler = ^(event event) -> void
+  type lifecycle_handler = ^(Symbol event, Exception error) -> void
+end

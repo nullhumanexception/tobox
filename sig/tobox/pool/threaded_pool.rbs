@@ -1,0 +1,15 @@
+module Tobox
+  class ThreadedPool < Pool
+    class KillError < Interrupt
+    end
+
+    @threads: Array[Thread]
+    @error_handlers: Array[lifecycle_handler]
+
+    def initialize: (Configuration configuration) -> void
+
+    def start: () -> untyped
+
+    def stop: () -> (nil | untyped)
+  end
+end

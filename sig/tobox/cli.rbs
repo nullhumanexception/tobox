@@ -1,0 +1,17 @@
+module Tobox
+  class CLI
+    @options: Hash[Symbol, untyped]
+
+    def self.run: (?Array[String] args) -> untyped
+
+    def initialize: (Array[String] args) -> void
+
+    def run: () -> untyped
+
+    private
+
+    def parse: (untyped args) -> untyped
+
+    def handle_signal: (untyped sig) -> untyped
+  end
+end

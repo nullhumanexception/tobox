@@ -1,0 +1,13 @@
+module Tobox
+  class Application
+    @configuration: Configuration
+    @running: bool
+    @pool: Pool
+
+    def initialize: (Configuration configuration) -> void
+
+    def start: () -> (nil | untyped)
+
+    def stop: () -> (nil | untyped)
+  end
+end

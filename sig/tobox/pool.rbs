@@ -1,0 +1,13 @@
+module Tobox
+  class Pool
+    @configuration: Configuration
+    @num_workers: Integer
+    @workers: Array[Worker]
+
+    def initialize: (untyped configuration) -> void
+
+    def stop: () -> void
+
+    def start: () -> void
+  end
+end

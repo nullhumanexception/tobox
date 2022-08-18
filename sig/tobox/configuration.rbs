@@ -1,0 +1,31 @@
+module Tobox
+  class Configuration
+    extend Forwardable
+
+    attr_reader handlers: Hash[Symbol, Array[event_handler]]
+
+    attr_reader lifecycle_events:  Hash[Symbol, Array[lifecycle_handler]]
+
+    @name: String?
+    @config: Hash[Symbol, untyped]
+
+    DEFAULT_CONFIGURATION: Hash[Symbol, untyped]
+
+    def initialize: (?String? name) { (?instance) -> void } -> void
+
+    def on: (Symbol event) { (*untyped) -> void } -> self
+
+    def handle_lifecycle_event: (Symbol event) { (Symbol code, Exception error) -> untyped } -> self
+
+    def message_to_arguments: () { (Symbol event_type, Hash[Symbol, untyped] before, Hash[Symbol, untyped] after) -> untyped } -> void
+    def freeze: () -> untyped
+
+    def []: (Symbol key) -> untyped
+
+    private
+
+    def method_missing: (Symbol meth, *untyped args) ?{ () -> untyped } -> untyped
+
+    def respond_to_missing?: (Symbol meth, *untyped args) -> untyped
+  end
+end
