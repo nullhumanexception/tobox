@@ -112,7 +112,7 @@ ruby31:
   image: "ruby:3.1"
   script:
     - *test
-    - bundle exec rbs -rforwardable test --target "Tobox*" rake test
+    - bundle exec rbs -rforwardable -rlogger -roptparse -ruri -rforwardable -rtimeout -rmonitor -rjson -rfiber test --target "Tobox*" rake test
     - bundle exec rake rubocop
   artifacts:
     paths:
@@ -144,3 +144,17 @@ coverage:
   artifacts:
     paths:
       - "coverage/"
+
+
+pages:
+  stage: deploy
+  needs:
+    - coverage
+  script:
+    - "if [ -d coverage ] ; then mv coverage public ; fi"
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  only:
+    - master
