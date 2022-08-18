@@ -28,11 +28,11 @@ module Tobox
 
       sum_fetched_events = @fetcher.fetch_events do |event|
         event_type = event[:type].to_sym
-        args = message_to_arguments(event_type, event[:before], event[:after])
+        args = message_to_arguments(event)
 
         if @handlers.key?(event_type)
           @handlers[event_type].each do |handler|
-            handler.call(*args)
+            handler.call(args)
           end
         end
       end
@@ -42,8 +42,8 @@ module Tobox
       sleep(@wait_for_events_delay) if sum_fetched_events.zero?
     end
 
-    def message_to_arguments(_event_type, *data)
-      data
+    def message_to_arguments(event)
+      event
     end
   end
 end

@@ -24,7 +24,7 @@ class WorkerTest < DatabaseTest
   def test_do_work_calls_right_callback
     created = []
     configuration = Configuration.new do
-      on(:event_created) { |_, after| created << after }
+      on(:event_created) { |event| created << event }
     end
     worker = Worker.new(configuration)
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
@@ -36,23 +36,24 @@ class WorkerTest < DatabaseTest
 
     assert created.size == 1
     msg = created.first
-    assert msg == { "foo" => "bar" }
+    assert msg[:type] == "event_created"
+    assert msg[:after] == { "foo" => "bar" }
   end
 
   def test_do_work_message_to_arguments
     created = []
     updated = []
     configuration = Configuration.new do
-      message_to_arguments do |event_type, before, after|
-        case event_type
-        when :event_created
+      message_to_arguments do |event|
+        case event[:type]
+        when "event_created"
           :random_object
         else
-          super(event_type, before, after)
+          super(event)
         end
       end
-      on(:event_created) { |obj| created << obj }
-      on(:event_updated) { |*data| updated << data }
+      on(:event_created) { |event| created << event }
+      on(:event_updated) { |event| updated << event }
     end
     worker = Worker.new(configuration)
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
@@ -69,14 +70,15 @@ class WorkerTest < DatabaseTest
 
     assert updated.size == 1
     msg = updated.first
-    msg == [{ "foo" => "bar" }, { "foo2" => "bar2" }]
+    assert msg[:before] == { "foo" => "bar" }
+    assert msg[:after] == { "foo2" => "bar2" }
   end
 
   def test_do_work_stops_working
     created = []
     configuration = Configuration.new do
       wait_for_events_delay 1
-      on(:event_created) { |_, after| created << after }
+      on(:event_created) { |event| created << event }
     end
     worker = Worker.new(configuration)
     worker.finish!
