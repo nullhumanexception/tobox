@@ -151,7 +151,7 @@ pages:
   needs:
     - coverage
   script:
-    - "if [ -d coverage ] ; then mv coverage public ; fi"
+    - "if [ -d coverage ] ; then mv coverage public/ coverage ; fi"
   artifacts:
     paths:
       - public
