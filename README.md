@@ -49,7 +49,7 @@ Sequel.migration do
       primary_key :id
       column :type, :varchar, null: false
       column :data_before, :json, null: true
-      column :data_after, :json, null: false
+      column :data_after, :json, null: true
       column :created_at, :time, null: false, default: Sequel::CURRENT_TIMESTAMP
     end
   end
@@ -66,12 +66,12 @@ end
 database Sequel.connect("postgres://user:pass@dbhost/database")
 # table :outbox
 # concurrency 8
-on(:user_created) do |_, user_data_hash|
-  puts "created user #{user_data_hash["id"]}"
+on("user_created") do |event|
+  puts "created user #{event[:after]["id"]}"
   DataLakeService.user_created(user_data_hash)
   BillingService.bill_user_account(user_data_hash)
 end
-on(:user_updated) do |user_data_hash_before_update, user_data_hash_after_update|
+on("user_updated") do |event|
   # ...
 end
 ```
@@ -84,6 +84,50 @@ end
 
 There is no API for event production yet (still TODO). It's recommended you write directly into the "outbox" table via database triggers (i.e. *insert into users table -> add user_created event"). Alternatively you can use `sequel` directly (`DB[:outbox].insert(...)`).
 
+4. Emit outbox events
+
+Currently, `tobox` only deals with outbox events consumption. When it comes to producing, you can do it yourself. There essentially two alternatives:
+
+4.1 Emit from application code
+
+If you're using `sequel` as your ORM, you can use the dataset API:
+
+```ruby
+# Assuming DB points to your `Sequel::Database`, and defaults are used:
+order = Order.new(
+  item_id: item.id,
+  price: 20_20,
+  currency: "EUR"
+)
+DB.transaction do
+  order.save
+  DB[:outbox].insert(event_type: "order_created", data_after: order.to_hash)
+end
+```
+
+4.2 Emit from database trigger
+
+This is how it could be done in PostgreSQL using trigger functions:
+
+```sql
+CREATE OR REPLACE FUNCTION order_created_outbox_event()
+  RETURNS TRIGGER
+  LANGUAGE PLPGSQL
+  AS
+$$
+BEGIN
+	INSERT INTO outbox(event_type, data_after)
+		 VALUES('order_created', row_to_json(NEW.*));
+	RETURN NEW;
+END;
+$$
+
+CREATE TRIGGER order_created_outbox_event
+  AFTER INSERT
+  ON orders
+  FOR EACH ROW
+  EXECUTE PROCEDURE order_created_outbox_event();
+```
 
 ## Configuration
 
@@ -115,7 +159,11 @@ concurrency 4
 
 **Note**: the default concurrency is adapted and different for each worker pool type, so make sure you understand how this tweak may affect you.
 
-`wait_for_events_delay`
+### `worker`
+
+Type of the worker used to process events. Can be `:thread` (default), `:fiber`, or a class implementing the `Tobox::Pool` protocol (TBD: define what this protocol is).
+
+### `wait_for_events_delay`
 
 Time (in seconds) to wait before checking again for events in the outbox.
 
@@ -128,11 +176,10 @@ Time (in seconds) to wait for events to finishing processing, before hard-killin
 callback executed when processing an event of the given type. By default, it'll yield the state of data before and after the event (unless `message_to_arguments` is set).
 
 ```ruby
-on(:order_created) { |_, after| puts "order created: #{after}" }
-on(:order_updated) { |_, after| puts "order created: was #{before}, now is #{after}" }
+on("order_created") { |event| puts "order created: #{event[:after]}" }
+on("order_updated") { |event| puts "order created: was #{event[:before]}, now is #{event[:after]}" }
 # ...
 ```
-
 
 ### `handle_lifecycle_event(smth) { }`
 
@@ -143,63 +190,78 @@ callback executed for certain internal events of the `tobox` process lifecycle, 
 on(:error) { |exception| Sentry.capture_exception(exception) }
 ```
 
-### `message_to_arguments(event)`
+### `message_to_arguments { |event| }`
 
 if exposing raw data to the `on` handlers is not what you'd want, you can always override the behaviour by providing an alternative "before/after fetcher" implementation.
 
 ```ruby
 # if you'd like to yield the ORM object only
-message_to_arguments do |event_type, before, after|
+message_to_arguments do |event|
 case event_type
-when :order_created, :order_updated
+when "order_created", "order_updated"
   Order.get(after[:id])
-when :payment_created, :payment_processed, :payment_reconciled
+when "payment_created", "payment_processed", "payment_reconciled"
   Payment.get(after[:id])
 else
-  super(event_type, before, after)
+  super(event)
 end
-on(:order_created) { |order| puts "order created: #{order}" }
+on("order_created") { |order| puts "order created: #{order}" }
 # ...
-on(:payment_created) { |payment| puts "payment created: #{payment}" }
+on("payment_created") { |payment| puts "payment created: #{payment}" }
 # ...
 ```
 
-## Recommendations
+## Event
 
+The event is composed of the following properties:
 
+* `:id`: unique event identifier
+* `:type`: label identifying the event (i.e. `"order_created"`)
+* `:before`: hash of the associated event data before event is emitted (can be `nil`)
+* `:after`: hash of the associated event data after event is emitted (can be `nil`)
+* `:created_at`: timestamp of when the event is emitted
+
+## Rails support
+
+Rails is supported out of the box by adding the [sequel-activerecord_connection](https://github.com/janko/sequel-activerecord_connection) gem into your Gemfile, and requiring the rails application in the `tobox` cli call:
+
+```bash
+> bundle exec tobox -C path/to/tobox.rb -r path/to/rails_app/config/environment.rb
+```
 
 ## Why?
 
-### Simple and lightweight, framework (and tech stack) agnostic
+### Simple and lightweight, framework (and programming language) agnostic
 
 `tobox` event callbacks yield the data in ruby primitive types, rather than heavy ORM instances. This is by design, as callbacks may not rely on application code being loaded.
 
-This allows `tobox` to process events dispatched from an application done in another programmming language.
+This allows `tobox` to process events dispatched from an application done in another programmming language, as an example.
 
-However, more monolithic deployments are also possible.
-
-TODO: add exammple
 
 ### No second storage system
 
 While `tobox` does not advertise itself as a background job framework, it can be used as such.
 
-Most tiered applications already have an RDBMS. Popular background job solutions, like `"sidekiq"` and `"shoryuken"`, usually require integrating with a separate message broker (Redis, SQS, RabbitMQ...). This increases the overhead in deployment and operations, as these brokers need to be provisioned, monitored, scaled separately, and usually bring its own billing rules.
+Most tiered applications already have an RDBMS. Popular background job solutions, like `"sidekiq"` and `"shoryuken"`, usually require integrating with a separate message broker (Redis, SQS, RabbitMQ...). This increases the overhead in deployment and operations, as these brokers need to be provisioned, monitored, scaled separately, and billed differently.
 
-`tobox` only requires the database you already need to account for anyway, allowing you to delay buying into more complicated setups until you need to and have budget for.
+`tobox` only requires the database you usually need to account for anyway, allowing you to delay buying into more complicated setups until you have to and have budget for.
 
-However, it can work well in tandem with such solutions.
+However, it can work well in tandem with such solutions:
 
-TODO: add example.
+```ruby
+# process event by scheduling an active job
+on("order_created") { |event| SendOrderMailJob.perform_later(event[:after]["id"]) }
+```
 
 ### Atomic processing via database transactions
 
-When scheduling work, one needs to ensure that data is committed in the database before the scheduling (this is one of the most frequent bugs using non-RDBMS background job frameworks).
+When scheduling work, one needs to ensure that data is committed to the database before scheduling. This is a very frequent bug when using non-RDBMS background job frameworks, such as [Sidekiq, which has a FAQ entry for this](https://github.com/mperham/sidekiq/wiki/FAQ#why-am-i-seeing-a-lot-of-cant-find-modelname-with-id12345-errors-with-sidekiq) .
 
-But even if you do that, the system can go down **after** the data is committed in the database and **before** the job is enqueued to the broker. Failing to address this behaviour makes the job delivery guarantee "at most once". This may or may not be a problem depending on what your job does (if it bills a customer, it probably is).
+But even if you do that, the system can go down **after** the data is committed in the database and **before** the job is enqueued to the broker. Failing to address this behaviour makes the [job delivery guarantee "at most once"](https://brandur.org/job-drain). This may or may not be a problem depending on what your job does (if it bills a customer, it probably is).
 
-By using the database as the message broker, `tobox` can rely on good old transactions to ensure that, when data is committed to the database, the corresponding outbox even is also committed, as long as everything is done within the same database transaction. This makes the delivery guarantee "exactly once".
+By using the database as the message broker, `tobox` can rely on good old transactions to ensure that data committed to the database has a corresponding event. This makes the delivery guarantee "exactly once".
 
+(The actual processing may change this to "at least once", as issues may happen before the event is successfully deleted from the outbox. Still, "at least once" is acceptable and solvable using idempotency mechanisms).
 
 ## Development
 
