@@ -45,9 +45,25 @@ class FetcherTest < DatabaseTest
     assert !db[:outbox].count.zero?
   end
 
+  def test_fetch_event_error
+    errors = []
+    db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
+    num_events = fetcher do |c|
+      c.on_error_event { |event, error| errors << [event, error] }
+    end.fetch_events { raise(StandardError, "testing123") } # rubocop:disable Style/MultilineBlockChain
+
+    assert num_events == 1
+    assert !errors.empty?
+
+    event, error = errors.first
+
+    assert event[:type] == "event_created"
+    assert error.message == "testing123"
+  end
+
   private
 
-  def fetcher
-    @fetcher ||= Fetcher.new(Configuration.new)
+  def fetcher(&blk)
+    @fetcher ||= Fetcher.new(Configuration.new(&blk))
   end
 end
