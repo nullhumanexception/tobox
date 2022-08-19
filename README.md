@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/tobox.svg)](http://rubygems.org/gems/tobox)
 [![pipeline status](https://gitlab.com/honeyryderchuck/tobox/badges/master/pipeline.svg)](https://gitlab.com/honeyryderchuck/tobox/pipelines?page=1&scope=all&ref=master)
-[![coverage report](https://gitlab.com/honeyryderchuck/tobox/badges/master/coverage.svg?job=coverage)](https://honeyryderchuck.gitlab.io/tobox/coverage/#_AllFiles)
+[![coverage report](https://gitlab.com/honeyryderchuck/tobox/badges/master/coverage.svg?job=coverage)](https://honeyryderchuck.gitlab.io/tobox/#_AllFiles)
 
 Simple, data-first events processing framework based on the [transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html).
 
@@ -181,13 +181,31 @@ on("order_updated") { |event| puts "order created: was #{event[:before]}, now is
 # ...
 ```
 
-### `handle_lifecycle_event(smth) { }`
+### `on_before_event { |event| }`
 
-callback executed for certain internal events of the `tobox` process lifecycle, i.e. when an error happens when processing an event (`handle_lifecycle_event(:error) { |exception| }`)
+callback executed right before proocessing an event.
 
 
 ```ruby
-on(:error) { |exception| Sentry.capture_exception(exception) }
+on_before_event { |event| start_trace(event[:id]) }
+```
+
+### `on_after_event { |event| }`
+
+callback executed right after proocessing an event.
+
+
+```ruby
+on_before_event { |event| finish_trace(event[:id]) }
+```
+
+### `on_error_event { |event, error| }`
+
+callback executed when an exception was raised while processing an event.
+
+
+```ruby
+on_error_event { |event, exception| Sentry.capture_exception(exception) }
 ```
 
 ### `message_to_arguments { |event| }`

@@ -45,8 +45,18 @@ module Tobox
       self
     end
 
-    def handle_lifecycle_event(event, &callback)
-      (@lifecycle_events[event.to_sym] ||= []) << callback
+    def on_before_event(&callback)
+      (@lifecycle_events[:before_event] ||= []) << callback
+      self
+    end
+
+    def on_after_event(&callback)
+      (@lifecycle_events[:after_event] ||= []) << callback
+      self
+    end
+
+    def on_error_event(&callback)
+      (@lifecycle_events[:error_event] ||= []) << callback
       self
     end
 

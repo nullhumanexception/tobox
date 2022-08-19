@@ -18,7 +18,9 @@ module Tobox
 
       @pick_next_sql = @ds.select(:id).order(:id).for_update.skip_locked.limit(1)
 
-      @error_handlers = Array(@configuration.lifecycle_events[:error])
+      @before_event_handlers = Array(@configuration.lifecycle_events[:before_event])
+      @after_event_handlers = Array(@configuration.lifecycle_events[:after_event])
+      @error_event_handlers = Array(@configuration.lifecycle_events[:error_event])
     end
 
     def fetch_events
@@ -31,10 +33,13 @@ module Tobox
         num_events = events.size
 
         events.each do |ev|
+          handle_before_event(ev)
           yield(to_message(ev))
         rescue StandardError => e
-          handle_error(ev, e)
+          handle_error_event(ev, e)
           raise Sequel::Rollback
+        ensure
+          handle_after_event(ev)
         end
       end
 
@@ -53,8 +58,20 @@ module Tobox
       }
     end
 
-    def handle_error(event, error)
-      @error_handlers.each do |hd|
+    def handle_before_event(event)
+      @before_event_handlers.each do |hd|
+        hd.call(event)
+      end
+    end
+
+    def handle_after_event(event)
+      @after_event_handlers.each do |hd|
+        hd.call(event)
+      end
+    end
+
+    def handle_error_event(event, error)
+      @error_event_handlers.each do |hd|
         hd.call(event, error)
       end
     end

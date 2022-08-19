@@ -2,14 +2,20 @@ module Tobox
   class Fetcher
     @configuration: Configuration
 
+    @before_event_handlers: Array[^(event event) -> void]
+    @after_event_handlers: Array[^(event event) -> void]
+    @error_event_handlers: Array[^(event event, Exception error) -> void]
+
     def initialize: (Configuration configuration) -> void
 
     def fetch_events: () { (untyped) -> untyped } -> untyped
 
     private
 
-    def to_message: (untyped event) -> { id: untyped, type: untyped, before: untyped, after: untyped, at: untyped }
+    def to_message: (event event) -> { id: untyped, type: untyped, before: untyped, after: untyped, at: untyped }
 
-    def handle_error: (untyped event, untyped error) -> untyped
+    def handle_before_event: (event event) -> void
+    def handle_after_event: (event event) -> void
+    def handle_error_event: (event event, Exception error) -> void
   end
 end

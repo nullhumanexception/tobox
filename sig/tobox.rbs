@@ -4,5 +4,5 @@ module Tobox
 
   type event = Hash[Symbol, untyped]
   type event_handler = ^(event event) -> void
-  type lifecycle_handler = ^(Symbol event, Exception error) -> void
+  type lifecycle_handler = ^(event event, *untyped) -> void
 end

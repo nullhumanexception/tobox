@@ -15,7 +15,9 @@ module Tobox
 
     def on: (Symbol event) { (*untyped) -> void } -> self
 
-    def handle_lifecycle_event: (Symbol event) { (Symbol code, Exception error) -> untyped } -> self
+    def on_before_event: () { (event event) -> void } -> self
+    def on_after_event: () { (event event) -> void } -> self
+    def on_error_event: () { (event event, Exception error) -> void } -> self
 
     def message_to_arguments: () { (Symbol event_type, Hash[Symbol, untyped] before, Hash[Symbol, untyped] after) -> untyped } -> void
     def freeze: () -> untyped
