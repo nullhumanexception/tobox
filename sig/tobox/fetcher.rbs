@@ -2,6 +2,9 @@ module Tobox
   class Fetcher
     @configuration: Configuration
 
+    @table: Symbol
+    @exponential_retry_factor: Integer
+
     @before_event_handlers: Array[^(event event) -> void]
     @after_event_handlers: Array[^(event event) -> void]
     @error_event_handlers: Array[^(event event, Exception error) -> void]
@@ -12,6 +15,7 @@ module Tobox
 
     private
 
+    def mark_as_error: (event event, Exception error) -> event
     def to_message: (event event) -> { id: untyped, type: untyped, before: untyped, after: untyped, at: untyped }
 
     def handle_before_event: (event event) -> void

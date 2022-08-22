@@ -13,6 +13,8 @@ module Tobox
     DEFAULT_CONFIGURATION = {
       database_uri: nil,
       table: :outbox,
+      max_attempts: 10,
+      exponential_retry_factor: 4,
       wait_for_events_delay: 5,
       shutdown_timeout: 10,
       concurrency: 4, # TODO: CPU count

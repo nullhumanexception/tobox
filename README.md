@@ -50,7 +50,10 @@ Sequel.migration do
       column :type, :varchar, null: false
       column :data_before, :json, null: true
       column :data_after, :json, null: true
-      column :created_at, :time, null: false, default: Sequel::CURRENT_TIMESTAMP
+      column :created_at, "timestamp without time zone", null: false, default: Sequel::CURRENT_TIMESTAMP
+      column :attempts, :integer, null: false, default: 0
+      column :run_at, "timestamp without time zone", null: true
+      column :last_error, :text, null: true
     end
   end
 
@@ -149,6 +152,16 @@ the name of the database table where outbox events are stored (`:outbox` by defa
 table :outbox
 ```
 
+### `max_attempts`
+
+Maximum number of times a failed attempt to process an event will be retried (`10` by default).
+
+```ruby
+concurrency 4
+```
+
+**Note**: the new attempt will be retried in `n ** 4`, where `n` is the number of past attempts for that event.
+
 ### `concurrency`
 
 Number of workers processing events.
@@ -238,6 +251,8 @@ The event is composed of the following properties:
 * `:before`: hash of the associated event data before event is emitted (can be `nil`)
 * `:after`: hash of the associated event data after event is emitted (can be `nil`)
 * `:created_at`: timestamp of when the event is emitted
+
+(*NOTE*: The event is also composed of other properties which are only relevant for `tobox`.)
 
 ## Rails support
 

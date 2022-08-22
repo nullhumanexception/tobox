@@ -49,6 +49,7 @@ class FetcherTest < DatabaseTest
     errors = []
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
     num_events = fetcher do |c|
+      c.exponential_retry_factor 1
       c.on_error_event { |event, error| errors << [event, error] }
     end.fetch_events { raise(StandardError, "testing123") } # rubocop:disable Style/MultilineBlockChain
 
@@ -58,7 +59,12 @@ class FetcherTest < DatabaseTest
     event, error = errors.first
 
     assert event[:type] == "event_created"
+    assert event[:attempts] == 1
+    assert !event[:run_at].nil?
+    assert event[:last_error].start_with?("testing123")
     assert error.message == "testing123"
+
+    assert fetcher.fetch_events.size.zero?
   end
 
   private
