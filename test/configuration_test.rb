@@ -26,12 +26,25 @@ class ConfigurationTest < Minitest::Test
   def test_handlers
     conf = Configuration.new do
       on(:resource_created) { 1 }
-      on(:resource_created) { 2 }
+      on_resource_created { 2 }
       on(:resource_updated) { 3 }
+      on_resource_updated { 3 }
     end
     assert conf.handlers.size == 2
     assert conf.handlers[:resource_created].size == 2
-    assert conf.handlers[:resource_updated].size == 1
+    assert conf.handlers[:resource_updated].size == 2
+  end
+
+  def test_event_callbacks
+    conf = Configuration.new do
+      on_before_event { 1 }
+      on_after_event { 2 }
+      on_error_event { 3 }
+    end
+    assert conf.lifecycle_events.size == 3
+    assert conf.lifecycle_events[:before_event].size == 1
+    assert conf.lifecycle_events[:after_event].size == 1
+    assert conf.lifecycle_events[:error_event].size == 1
   end
 
   private
