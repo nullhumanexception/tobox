@@ -28,6 +28,7 @@ module Tobox
       @lifecycle_events = {}
       @handlers = {}
       @message_to_arguments = nil
+      @plugins = []
       return unless block
 
       case block.arity
@@ -67,11 +68,25 @@ module Tobox
       self
     end
 
+    def plugin(plugin, _options = nil, &block)
+      raise Error, "Cannot add a plugin to a frozen config" if frozen?
+
+      plugin = Plugins.load_plugin(plugin) if plugin.is_a?(Symbol)
+
+      return if @plugins.include?(plugin)
+
+      @plugins << plugin
+      plugin.load_dependencies(self, &block) if plugin.respond_to?(:load_dependencies)
+      plugin.load_configuration(self, &block) if plugin.respond_to?(:load_configuration)
+      plugin.configure(self, &block) if plugin.respond_to?(:configure)
+    end
+
     def freeze
       @name.freeze
       @config.each_value(&:freeze).freeze
       @handlers.each_value(&:freeze).freeze
       @lifecycle_events.each_value(&:freeze).freeze
+      @plugins.freeze
       super
     end
 
