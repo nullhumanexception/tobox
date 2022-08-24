@@ -47,6 +47,7 @@ module Tobox
             num_events = events.size
 
             events.each do |ev|
+              ev[:metadata] = JSON.parse(ev[:metadata].to_s)
               handle_before_event(ev)
               yield(to_message(ev))
             rescue StandardError => e

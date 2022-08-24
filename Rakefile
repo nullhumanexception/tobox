@@ -9,6 +9,13 @@ Rake::TestTask.new(:test) do |t|
   t.test_files = FileList["test/**/*_test.rb"]
 end
 
+desc "integration tests for third party modules"
+Rake::TestTask.new(:integration_tests) do |t|
+  t.libs = %w[lib test]
+  t.pattern = "integration_tests/**/*_test.rb"
+  t.warning = false
+end
+
 begin
   require "rubocop/rake_task"
   desc "Run rubocop"

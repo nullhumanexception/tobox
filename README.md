@@ -54,6 +54,9 @@ Sequel.migration do
       column :attempts, :integer, null: false, default: 0
       column :run_at, "timestamp without time zone", null: true
       column :last_error, :text, null: true
+      column :metadata, :json, null: true
+
+      index Sequel.desc(:run_at)
     end
   end
 

@@ -15,6 +15,10 @@ gem "rubocop-performance", require: false
 gem "rubocop-rubycw", require: false
 gem "simplecov", require: false
 
+# Integrations
+
+gem "sentry-ruby", require: false
+
 if RUBY_VERSION >= "3.1.0"
   gem "debug"
   gem "fiber_scheduler"
