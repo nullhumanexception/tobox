@@ -6,7 +6,8 @@ if ENV.key?("CI")
   require "simplecov"
   commands = [RUBY_ENGINE, RUBY_VERSION, ENV.fetch("DATABASE_URL", "")[%r{(\w+):(//|:)}, 1]].compact
   SimpleCov.command_name commands.join("-")
-  SimpleCov.coverage_dir "coverage/#{RUBY_ENGINE}-#{RUBY_VERSION}"
+  coverage_key = ENV.fetch("COVERAGE_KEY", "#{RUBY_ENGINE}-#{RUBY_VERSION}")
+  SimpleCov.coverage_dir "coverage/#{coverage_key}"
 end
 
 require "json"
