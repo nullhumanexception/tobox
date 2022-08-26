@@ -26,6 +26,9 @@ Style/StringLiteralsInInterpolation:
 Style/Documentation:
   Enabled: false
 
+Style/SafeNavigation:
+  Enabled: false
+
 Metrics/ClassLength:
   Enabled: false
 

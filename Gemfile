@@ -17,6 +17,7 @@ gem "simplecov", require: false
 
 # Integrations
 
+gem "ddtrace", require: false
 gem "sentry-ruby", require: false
 
 if RUBY_VERSION >= "3.1.0"
