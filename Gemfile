@@ -19,6 +19,7 @@ gem "simplecov", require: false
 
 gem "ddtrace", require: false
 gem "sentry-ruby", require: false
+gem "zeitwerk", require: false
 
 if RUBY_VERSION >= "3.1.0"
   gem "debug"
