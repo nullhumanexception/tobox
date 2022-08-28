@@ -139,6 +139,10 @@ CREATE TRIGGER order_created_outbox_event
 
 As mentioned above, configuration can be set in a particular file. The following options are configurable:
 
+### `environment``
+
+Sets the application environment (either "development" or "production"). Can be set directly, or via `APP_ENV` environment variable (defaults to "development").
+
 ### `database_uri`
 
 Accepts a URI pointing to a database, [where scheme identifies the database adapter to be used](https://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html):
@@ -264,6 +268,70 @@ Rails is supported out of the box by adding the [sequel-activerecord_connection]
 ```bash
 > bundle exec tobox -C path/to/tobox.rb -r path/to/rails_app/config/environment.rb
 ```
+
+In the `tobox` config, you can set the environment:
+
+```ruby
+environment Rails.env
+```
+
+## Plugins
+
+`tobox` ships with a very simple plugin system. (TODO: add docs).
+
+Plugins can be loaded in the config via `plugin`:
+
+```ruby
+# tobox.rb
+plugin(:plugin_name)
+```
+
+It ships with the following integrations.
+
+### Zeitwerk
+
+(requires the `zeitwerk` gem.)
+
+Plugin for the [zeitwerk](https://github.com/fxn/zeitwerk) auto-loader. It allows to set the autoload dirs, and seamlessly integrates code reloading in "development", and eagerloading in "production":
+
+```ruby
+# tobox.rb
+plugin(:zeitwerk)
+zeitwerk_loader do |loader|
+  loader.push_dir("path/to/handlers")
+end
+```
+
+### Sentry
+
+(requires the `sentry-ruby` gem.)
+
+Plugin for the [sentry](https://github.com/getsentry/sentry-ruby) ruby SDK for error tracking. It'll send all errors happening while processing events to Sentry.
+
+```ruby
+# tobox.rb
+plugin(:sentry)
+```
+
+### Datadog
+
+(requires the `ddtrace` gem.)
+
+Plugin for [datadog](https://github.com/DataDog/dd-trace-rb) ruby SDK. It'll generate traces for event handling.
+
+```ruby
+# you can init the datadog config in another file to load:
+Datadog.configure do |c|
+  c.tracing.instrument :tobox
+end
+
+# tobox.rb
+plugin(:datadog)
+```
+
+## Supported Rubies
+
+All Rubies greater or equal to 2.6, and always latest JRuby and Truffleruby.
 
 ## Why?
 
