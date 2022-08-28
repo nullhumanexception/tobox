@@ -11,6 +11,7 @@ module Tobox
     def_delegator :@config, :[]
 
     DEFAULT_CONFIGURATION = {
+      environment: ENV.fetch("APP_ENV", "development"),
       database_uri: nil,
       table: :outbox,
       max_attempts: 10,
@@ -77,7 +78,9 @@ module Tobox
 
       @plugins << plugin
       plugin.load_dependencies(self, &block) if plugin.respond_to?(:load_dependencies)
-      plugin.load_configuration(self, &block) if plugin.respond_to?(:load_configuration)
+
+      extend(plugin::ConfigurationMethods) if defined?(plugin::ConfigurationMethods)
+
       plugin.configure(self, &block) if plugin.respond_to?(:configure)
     end
 

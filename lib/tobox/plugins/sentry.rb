@@ -124,14 +124,12 @@ module Tobox
           require "sentry-ruby"
         end
 
-        def load_configuration(config)
+        def configure(config)
           event_handler = EventHandler.new(config)
           config.on_before_event(&event_handler.method(:on_start))
           config.on_after_event(&event_handler.method(:on_finish))
           config.on_error_event(&event_handler.method(:on_error))
-        end
 
-        def configure(*)
           ::Sentry::Configuration.attr_reader(:tobox)
           ::Sentry::Configuration.add_post_initialization_callback do
             @tobox = Plugins::Sentry::Configuration.new

@@ -139,7 +139,7 @@ class DatadogTest < DatabaseTest
     end
   end
 
-
+  private
 
   def fetcher(&blk)
     @fetcher ||= Fetcher.new(Configuration.new(&blk))
