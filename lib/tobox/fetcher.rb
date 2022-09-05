@@ -7,11 +7,15 @@ module Tobox
     def initialize(configuration)
       @configuration = configuration
 
+      @logger = @configuration.default_logger
+
       database_uri = @configuration[:database_uri]
       @db = database_uri ? Sequel.connect(database_uri.to_s) : Sequel::DATABASES.first
+      raise Error, "no database found" unless @db
+
       @db.extension :date_arithmetic
 
-      raise Error, "no database found" unless @db
+      @db.loggers << @logger unless @configuration[:environment] == "production"
 
       @table = configuration[:table]
       @exponential_retry_factor = configuration[:exponential_retry_factor]
@@ -20,9 +24,13 @@ module Tobox
 
       @ds = @db[@table]
 
+      run_at_conds = [
+        { Sequel[@table][:run_at] => nil },
+        (Sequel.expr(Sequel[@table][:run_at]) < Sequel::CURRENT_TIMESTAMP)
+      ].reduce { |agg, cond| Sequel.expr(agg) | Sequel.expr(cond) }
+
       @pick_next_sql = @ds.where(Sequel[@table][:attempts] < max_attempts) # filter out exhausted attempts
-                          .where(Sequel[@table][:run_at] => nil)
-                          .or(Sequel.expr(Sequel[@table][:run_at]) < Sequel::CURRENT_TIMESTAMP)
+                          .where(run_at_conds)
                           .order(Sequel.desc(:run_at, nulls: :first), :id)
                           .for_update
                           .skip_locked
@@ -40,32 +48,39 @@ module Tobox
 
         events = nil
         error = nil
-        @db.transaction(savepoint: true) do
-          events = @ds.where(id: event_ids).returning.delete
+        unless event_ids.empty?
+          @db.transaction(savepoint: true) do
+            events = @ds.where(id: event_ids).returning.delete
 
-          if blk
-            num_events = events.size
+            if blk
+              num_events = events.size
 
-            events.each do |ev|
-              handle_before_event(ev)
-              yield(to_message(ev))
-            rescue StandardError => e
-              error = e
-              raise Sequel::Rollback
+              events.each do |ev|
+                ev[:metadata] = JSON.parse(ev[:metadata].to_s) if ev[:metadata]
+                handle_before_event(ev)
+                yield(to_message(ev))
+              rescue StandardError => e
+                error = e
+                raise Sequel::Rollback
+              end
+            else
+              events.map!(&method(:to_message))
             end
-          else
-            events.map!(&method(:to_message))
           end
         end
 
-        return events unless events && blk
+        return blk ? 0 : [] if events.nil?
 
-        events.each do |event|
-          if error
-            event = mark_as_error(event, error)
-            handle_error_event(event, error)
-          else
-            handle_after_event(event)
+        return events unless blk
+
+        if events
+          events.each do |event|
+            if error
+              event.merge!(mark_as_error(event, error))
+              handle_error_event(event, error)
+            else
+              handle_after_event(event)
+            end
           end
         end
       end
@@ -97,18 +112,25 @@ module Tobox
     end
 
     def handle_before_event(event)
+      @logger.debug { "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) starting..." }
       @before_event_handlers.each do |hd|
         hd.call(event)
       end
     end
 
     def handle_after_event(event)
+      @logger.debug { "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) completed" }
       @after_event_handlers.each do |hd|
         hd.call(event)
       end
     end
 
     def handle_error_event(event, error)
+      @logger.error do
+        "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) failed with error\n" \
+          "#{error.class}: #{error.message}\n" \
+          "#{error.backtrace.join("\n")}"
+      end
       @error_event_handlers.each do |hd|
         hd.call(event, error)
       end

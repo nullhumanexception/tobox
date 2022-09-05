@@ -4,6 +4,7 @@ require "test_helper"
 
 class ThreadedPoolTest < Minitest::Test
   include Tobox
+  include WithTestLogger
 
   def test_pool_init
     pool do |c|
@@ -30,7 +31,7 @@ class ThreadedPoolTest < Minitest::Test
 
   def pool
     @pool ||= begin
-      conf = Configuration.new do |c|
+      conf = make_configuration do |c|
         yield c if block_given?
         c.worker :thread
       end

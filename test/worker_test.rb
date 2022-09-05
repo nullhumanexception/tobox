@@ -7,7 +7,7 @@ class WorkerTest < DatabaseTest
   include Tobox
 
   def test_do_work_sleeps_on_it
-    worker = Worker.new(Configuration.new { wait_for_events_delay(2) })
+    worker = Worker.new(make_configuration { |c| c.wait_for_events_delay(2) })
 
     # checks it sleeps on it
     time_now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -23,8 +23,8 @@ class WorkerTest < DatabaseTest
 
   def test_do_work_calls_right_callback
     created = []
-    configuration = Configuration.new do
-      on(:event_created) { |event| created << event }
+    configuration = make_configuration do |c|
+      c.on(:event_created) { |event| created << event }
     end
     worker = Worker.new(configuration)
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
@@ -43,8 +43,8 @@ class WorkerTest < DatabaseTest
   def test_do_work_message_to_arguments
     created = []
     updated = []
-    configuration = Configuration.new do
-      message_to_arguments do |event|
+    configuration = make_configuration do |c|
+      c.message_to_arguments do |event|
         case event[:type]
         when "event_created"
           :random_object
@@ -52,8 +52,8 @@ class WorkerTest < DatabaseTest
           super(event)
         end
       end
-      on(:event_created) { |event| created << event }
-      on(:event_updated) { |event| updated << event }
+      c.on(:event_created) { |event| created << event }
+      c.on(:event_updated) { |event| updated << event }
     end
     worker = Worker.new(configuration)
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
@@ -76,9 +76,9 @@ class WorkerTest < DatabaseTest
 
   def test_do_work_stops_working
     created = []
-    configuration = Configuration.new do
-      wait_for_events_delay 1
-      on(:event_created) { |event| created << event }
+    configuration = make_configuration do |c|
+      c.wait_for_events_delay 1
+      c.on(:event_created) { |event| created << event }
     end
     worker = Worker.new(configuration)
     worker.finish!

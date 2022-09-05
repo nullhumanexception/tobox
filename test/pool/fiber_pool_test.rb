@@ -22,7 +22,7 @@ class FiberPoolTest < Minitest::Test
 
   def pool
     @pool ||= begin
-      conf = Configuration.new do |c|
+      conf = make_configuration do |c|
         yield c if block_given?
         c.worker :fiber
       end

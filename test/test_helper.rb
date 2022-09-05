@@ -6,7 +6,8 @@ if ENV.key?("CI")
   require "simplecov"
   commands = [RUBY_ENGINE, RUBY_VERSION, ENV.fetch("DATABASE_URL", "")[%r{(\w+):(//|:)}, 1]].compact
   SimpleCov.command_name commands.join("-")
-  SimpleCov.coverage_dir "coverage/#{RUBY_ENGINE}-#{RUBY_VERSION}"
+  coverage_key = ENV.fetch("COVERAGE_KEY", "#{RUBY_ENGINE}-#{RUBY_VERSION}")
+  SimpleCov.coverage_dir "coverage/#{coverage_key}"
 end
 
 require "json"
@@ -86,8 +87,22 @@ require "tobox"
 require "minitest/autorun"
 require "minitest/hooks"
 
+module WithTestLogger
+  private
+
+  def make_configuration(&blk)
+    Tobox::Configuration.new do |c|
+      c.logger(Logger.new(File::NULL))
+      yield c if blk
+    end
+  end
+end
+
 class DatabaseTest < Minitest::Test
   include Minitest::Hooks
+  include WithTestLogger
+
+  private
 
   def around
     db.transaction(rollback: :always, savepoint: true, auto_savepoint: true) do

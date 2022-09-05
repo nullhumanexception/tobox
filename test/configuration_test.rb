@@ -6,9 +6,6 @@ class ConfigurationTest < Minitest::Test
   include Tobox
 
   def test_alias_config_methods
-    assert configuration[:table] == :outbox
-    configuration.table(:doubtbox)
-    assert configuration[:table] == :doubtbox
     assert_raises do
       conf = Configuration.new {}
       conf.table(:doubtbox)

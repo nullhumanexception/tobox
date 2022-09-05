@@ -1,16 +1,20 @@
 # frozen_string_literal: true
 
+require "logger"
 require "forwardable"
 
 module Tobox
   class Configuration
     extend Forwardable
 
-    attr_reader :handlers, :lifecycle_events, :arguments_handler
+    attr_reader :handlers, :lifecycle_events, :arguments_handler, :default_logger
 
     def_delegator :@config, :[]
 
     DEFAULT_CONFIGURATION = {
+      environment: ENV.fetch("APP_ENV", "development"),
+      logger: nil,
+      log_level: nil,
       database_uri: nil,
       table: :outbox,
       max_attempts: 10,
@@ -28,16 +32,22 @@ module Tobox
       @lifecycle_events = {}
       @handlers = {}
       @message_to_arguments = nil
-      return unless block
+      @plugins = []
 
-      case block.arity
-      when 0
-        instance_exec(&block)
-      when 1
-        yield(self)
-      else
-        raise Error, "configuration does not support blocks with more than one variable"
+      if block
+        case block.arity
+        when 0
+          instance_exec(&block)
+        when 1
+          yield(self)
+        else
+          raise Error, "configuration does not support blocks with more than one variable"
+        end
       end
+
+      env = @config[:environment]
+      @default_logger = @config[:logger] || Logger.new(STDERR) # rubocop:disable Style/GlobalStdStream
+      @default_logger.level = @config[:log_level] || (env == "production" ? Logger::INFO : Logger::DEBUG)
 
       freeze
     end
@@ -67,11 +77,27 @@ module Tobox
       self
     end
 
+    def plugin(plugin, _options = nil, &block)
+      raise Error, "Cannot add a plugin to a frozen config" if frozen?
+
+      plugin = Plugins.load_plugin(plugin) if plugin.is_a?(Symbol)
+
+      return if @plugins.include?(plugin)
+
+      @plugins << plugin
+      plugin.load_dependencies(self, &block) if plugin.respond_to?(:load_dependencies)
+
+      extend(plugin::ConfigurationMethods) if defined?(plugin::ConfigurationMethods)
+
+      plugin.configure(self, &block) if plugin.respond_to?(:configure)
+    end
+
     def freeze
       @name.freeze
       @config.each_value(&:freeze).freeze
       @handlers.each_value(&:freeze).freeze
       @lifecycle_events.each_value(&:freeze).freeze
+      @plugins.freeze
       super
     end
 

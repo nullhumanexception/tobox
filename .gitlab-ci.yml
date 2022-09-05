@@ -11,10 +11,10 @@ cache:
     - vendor
 
 .install_deps: &install_deps
-  - apt-get update && apt-get install -y postgresql-client libpq-dev
+  - apt-get update && apt-get install -y make postgresql-client libpq-dev
 
 .test: &test
-- "DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake test"
+- "PARALLEL=1 DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake test"
 
 .test_services: &test_services
   services:
@@ -112,6 +112,7 @@ ruby31:
   image: "ruby:3.1"
   script:
     - *test
+    - "COVERAGE_KEY=$RUBY_ENGINE-$RUBY_VERSION-integration-tests DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake integration_tests"
     - bundle exec rbs -rforwardable -rlogger -roptparse -ruri -rforwardable -rtimeout -rmonitor -rjson -rfiber test --target "Tobox*" rake test
     - bundle exec rake rubocop
   artifacts:

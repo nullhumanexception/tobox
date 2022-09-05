@@ -5,6 +5,8 @@ module Tobox
     @table: Symbol
     @exponential_retry_factor: Integer
 
+    @logger: Logger
+
     @before_event_handlers: Array[^(event event) -> void]
     @after_event_handlers: Array[^(event event) -> void]
     @error_event_handlers: Array[^(event event, Exception error) -> void]

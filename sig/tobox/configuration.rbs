@@ -6,6 +6,8 @@ module Tobox
 
     attr_reader lifecycle_events:  Hash[Symbol, Array[lifecycle_handler]]
 
+    attr_reader default_logger: Logger
+
     @name: String?
     @config: Hash[Symbol, untyped]
 
