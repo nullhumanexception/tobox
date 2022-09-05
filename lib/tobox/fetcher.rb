@@ -11,9 +11,11 @@ module Tobox
 
       database_uri = @configuration[:database_uri]
       @db = database_uri ? Sequel.connect(database_uri.to_s) : Sequel::DATABASES.first
+      raise Error, "no database found" unless @db
+
       @db.extension :date_arithmetic
 
-      raise Error, "no database found" unless @db
+      @db.loggers << @logger unless @configuration[:environment] == "production"
 
       @table = configuration[:table]
       @exponential_retry_factor = configuration[:exponential_retry_factor]
