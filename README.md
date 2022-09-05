@@ -249,6 +249,14 @@ on("payment_created") { |payment| puts "payment created: #{payment}" }
 # ...
 ```
 
+### logger
+
+Overrides the internal logger (an instance of `Logger`).
+
+### log_level
+
+Overrides the default log level ("info" when in "production" environment, "debug" otherwise).
+
 ## Event
 
 The event is composed of the following properties:

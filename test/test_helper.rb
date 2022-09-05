@@ -87,8 +87,22 @@ require "tobox"
 require "minitest/autorun"
 require "minitest/hooks"
 
+module WithTestLogger
+  private
+
+  def make_configuration(&blk)
+    Tobox::Configuration.new do |c|
+      c.logger(Logger.new(File::NULL))
+      yield c if blk
+    end
+  end
+end
+
 class DatabaseTest < Minitest::Test
   include Minitest::Hooks
+  include WithTestLogger
+
+  private
 
   def around
     db.transaction(rollback: :always, savepoint: true, auto_savepoint: true) do

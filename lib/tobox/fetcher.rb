@@ -7,6 +7,8 @@ module Tobox
     def initialize(configuration)
       @configuration = configuration
 
+      @logger = @configuration.default_logger
+
       database_uri = @configuration[:database_uri]
       @db = database_uri ? Sequel.connect(database_uri.to_s) : Sequel::DATABASES.first
       @db.extension :date_arithmetic
@@ -98,18 +100,25 @@ module Tobox
     end
 
     def handle_before_event(event)
+      @logger.debug { "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) starting..." }
       @before_event_handlers.each do |hd|
         hd.call(event)
       end
     end
 
     def handle_after_event(event)
+      @logger.debug { "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) completed" }
       @after_event_handlers.each do |hd|
         hd.call(event)
       end
     end
 
     def handle_error_event(event, error)
+      @logger.error do
+        "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) failed with error\n" \
+          "#{error.class}: #{error.message}\n" \
+          "#{error.backtrace.join("\n")}"
+      end
       @error_event_handlers.each do |hd|
         hd.call(event, error)
       end

@@ -4,6 +4,7 @@ require "test_helper"
 
 class PoolTest < Minitest::Test
   include Tobox
+  include WithTestLogger
 
   def test_pool_init
     pool do |c|
@@ -29,7 +30,7 @@ class PoolTest < Minitest::Test
 
   def pool
     @pool ||= begin
-      conf = Configuration.new do |c|
+      conf = make_configuration do |c|
         yield c if block_given?
       end
       Class.new(Pool) do

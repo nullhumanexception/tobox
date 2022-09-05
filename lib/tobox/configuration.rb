@@ -1,17 +1,20 @@
 # frozen_string_literal: true
 
+require "logger"
 require "forwardable"
 
 module Tobox
   class Configuration
     extend Forwardable
 
-    attr_reader :handlers, :lifecycle_events, :arguments_handler
+    attr_reader :handlers, :lifecycle_events, :arguments_handler, :default_logger
 
     def_delegator :@config, :[]
 
     DEFAULT_CONFIGURATION = {
       environment: ENV.fetch("APP_ENV", "development"),
+      logger: nil,
+      log_level: nil,
       database_uri: nil,
       table: :outbox,
       max_attempts: 10,
@@ -30,16 +33,21 @@ module Tobox
       @handlers = {}
       @message_to_arguments = nil
       @plugins = []
-      return unless block
 
-      case block.arity
-      when 0
-        instance_exec(&block)
-      when 1
-        yield(self)
-      else
-        raise Error, "configuration does not support blocks with more than one variable"
+      if block
+        case block.arity
+        when 0
+          instance_exec(&block)
+        when 1
+          yield(self)
+        else
+          raise Error, "configuration does not support blocks with more than one variable"
+        end
       end
+
+      env = @config[:environment]
+      @default_logger = @config[:logger] || Logger.new(STDERR) # rubocop:disable Style/GlobalStdStream
+      @default_logger.level = @config[:log_level] || (env == "production" ? Logger::INFO : Logger::DEBUG)
 
       freeze
     end

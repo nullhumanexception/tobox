@@ -4,6 +4,7 @@ require "test_helper"
 
 class ApplicationTest < Minitest::Test
   include Tobox
+  include WithTestLogger
 
   def test_start_stop
     worker_init = Class.new do
@@ -38,6 +39,6 @@ class ApplicationTest < Minitest::Test
   private
 
   def application(&blk)
-    @application ||= Application.new(Configuration.new(&blk))
+    @application ||= Application.new(make_configuration(&blk))
   end
 end

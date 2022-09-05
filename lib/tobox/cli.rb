@@ -17,12 +17,12 @@ module Tobox
 
     def run
       options = @options
+      logger = Logger.new($stderr)
 
       config = Configuration.new do |c|
+        c.logger(logger)
         c.instance_eval(File.read(options.fetch(:config_file)), options.fetch(:config_file), 1)
       end
-
-      logger = Logger.new($stderr)
 
       # boot
       options.fetch(:require).each(&method(:require))
