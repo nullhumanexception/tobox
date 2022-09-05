@@ -48,33 +48,39 @@ module Tobox
 
         events = nil
         error = nil
-        @db.transaction(savepoint: true) do
-          events = @ds.where(id: event_ids).returning.delete
+        unless event_ids.empty?
+          @db.transaction(savepoint: true) do
+            events = @ds.where(id: event_ids).returning.delete
 
-          if blk
-            num_events = events.size
+            if blk
+              num_events = events.size
 
-            events.each do |ev|
-              ev[:metadata] = JSON.parse(ev[:metadata].to_s) if ev[:metadata]
-              handle_before_event(ev)
-              yield(to_message(ev))
-            rescue StandardError => e
-              error = e
-              raise Sequel::Rollback
+              events.each do |ev|
+                ev[:metadata] = JSON.parse(ev[:metadata].to_s) if ev[:metadata]
+                handle_before_event(ev)
+                yield(to_message(ev))
+              rescue StandardError => e
+                error = e
+                raise Sequel::Rollback
+              end
+            else
+              events.map!(&method(:to_message))
             end
-          else
-            events.map!(&method(:to_message))
           end
         end
 
-        return events unless events && blk
+        return blk ? 0 : [] if events.nil?
 
-        events.each do |event|
-          if error
-            event.merge!(mark_as_error(event, error))
-            handle_error_event(event, error)
-          else
-            handle_after_event(event)
+        return events unless blk
+
+        if events
+          events.each do |event|
+            if error
+              event.merge!(mark_as_error(event, error))
+              handle_error_event(event, error)
+            else
+              handle_after_event(event)
+            end
           end
         end
       end
