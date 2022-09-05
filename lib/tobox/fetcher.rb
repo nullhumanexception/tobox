@@ -24,9 +24,13 @@ module Tobox
 
       @ds = @db[@table]
 
+      run_at_conds = [
+        { Sequel[@table][:run_at] => nil },
+        (Sequel.expr(Sequel[@table][:run_at]) < Sequel::CURRENT_TIMESTAMP)
+      ].reduce { |agg, cond| Sequel.expr(agg) | Sequel.expr(cond) }
+
       @pick_next_sql = @ds.where(Sequel[@table][:attempts] < max_attempts) # filter out exhausted attempts
-                          .where(Sequel[@table][:run_at] => nil)
-                          .or(Sequel.expr(Sequel[@table][:run_at]) < Sequel::CURRENT_TIMESTAMP)
+                          .where(run_at_conds)
                           .order(Sequel.desc(:run_at, nulls: :first), :id)
                           .for_update
                           .skip_locked
