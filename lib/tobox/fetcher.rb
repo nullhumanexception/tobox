@@ -119,7 +119,7 @@ module Tobox
     def try_json_parse(data)
       return unless data
 
-      data = JSON.parse(data.to_s) unless data.is_a?(Hash)
+      data = JSON.parse(data.to_s) unless data.respond_to?(:to_hash)
 
       data
     end
