@@ -2,10 +2,10 @@
 
 module Tobox
   class Worker
-    def initialize(configuration)
+    def initialize(label, configuration)
       @wait_for_events_delay = configuration[:wait_for_events_delay]
       @handlers = configuration.handlers || {}
-      @fetcher = Fetcher.new(configuration)
+      @fetcher = Fetcher.new(label, configuration)
       @finished = false
 
       return unless (message_to_arguments = configuration.arguments_handler)

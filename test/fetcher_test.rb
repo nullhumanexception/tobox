@@ -70,6 +70,6 @@ class FetcherTest < DatabaseTest
   private
 
   def fetcher(&blk)
-    @fetcher ||= Fetcher.new(make_configuration(&blk))
+    @fetcher ||= Fetcher.new("test", make_configuration(&blk))
   end
 end
