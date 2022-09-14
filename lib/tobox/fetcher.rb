@@ -57,7 +57,7 @@ module Tobox
               num_events = events.size
 
               events.each do |ev|
-                ev[:metadata] = JSON.parse(ev[:metadata].to_s) if ev[:metadata]
+                ev[:metadata] = try_json_parse(ev[:metadata])
                 handle_before_event(ev)
                 yield(to_message(ev))
               rescue StandardError => e
@@ -110,10 +110,18 @@ module Tobox
       {
         id: event[:id],
         type: event[:type],
-        before: (JSON.parse(event[:data_before].to_s) if event[:data_before]),
-        after: (JSON.parse(event[:data_after].to_s) if event[:data_after]),
+        before: try_json_parse(event[:data_before]),
+        after: try_json_parse(event[:data_after]),
         at: event[:created_at]
       }
+    end
+
+    def try_json_parse(data)
+      return unless data
+
+      data = JSON.parse(data.to_s) unless data.is_a?(Hash)
+
+      data
     end
 
     def handle_before_event(event)
