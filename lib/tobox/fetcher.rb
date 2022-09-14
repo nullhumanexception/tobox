@@ -4,7 +4,8 @@ require "json"
 
 module Tobox
   class Fetcher
-    def initialize(configuration)
+    def initialize(label, configuration)
+      @label = label
       @configuration = configuration
 
       @logger = @configuration.default_logger
@@ -90,6 +91,10 @@ module Tobox
 
     private
 
+    def log_message(msg)
+      "(worker: #{@label}) -> #{msg}"
+    end
+
     def mark_as_error(event, error)
       @ds.where(id: event[:id]).returning.update(
         attempts: Sequel[@table][:attempts] + 1,
@@ -112,14 +117,16 @@ module Tobox
     end
 
     def handle_before_event(event)
-      @logger.debug { "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) starting..." }
+      @logger.debug do
+        log_message("outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) starting...")
+      end
       @before_event_handlers.each do |hd|
         hd.call(event)
       end
     end
 
     def handle_after_event(event)
-      @logger.debug { "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) completed" }
+      @logger.debug { log_message("outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) completed") }
       @after_event_handlers.each do |hd|
         hd.call(event)
       end
@@ -127,9 +134,9 @@ module Tobox
 
     def handle_error_event(event, error)
       @logger.error do
-        "outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) failed with error\n" \
-          "#{error.class}: #{error.message}\n" \
-          "#{error.backtrace.join("\n")}"
+        log_message("outbox event (type: \"#{event[:type]}\", attempts: #{event[:attempts]}) failed with error\n" \
+                    "#{error.class}: #{error.message}\n" \
+                    "#{error.backtrace.join("\n")}")
       end
       @error_event_handlers.each do |hd|
         hd.call(event, error)

@@ -5,7 +5,9 @@ module Tobox
     def initialize(configuration)
       @configuration = configuration
       @num_workers = configuration[:concurrency]
-      @workers = Array.new(@num_workers) { Worker.new(configuration) }
+      @workers = Array.new(@num_workers) do |idx|
+        Worker.new("tobox-worker-#{idx}", configuration)
+      end
       start
     end
 

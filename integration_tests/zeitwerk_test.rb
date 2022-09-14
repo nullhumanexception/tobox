@@ -40,6 +40,6 @@ class ZeitwerkTest < DatabaseTest
   private
 
   def fetcher(&blk)
-    @fetcher ||= Fetcher.new(Configuration.new(&blk))
+    @fetcher ||= Fetcher.new("test", Configuration.new(&blk))
   end
 end

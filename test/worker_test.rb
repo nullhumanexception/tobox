@@ -7,7 +7,7 @@ class WorkerTest < DatabaseTest
   include Tobox
 
   def test_do_work_sleeps_on_it
-    worker = Worker.new(make_configuration { |c| c.wait_for_events_delay(2) })
+    worker = Worker.new("test", make_configuration { |c| c.wait_for_events_delay(2) })
 
     # checks it sleeps on it
     time_now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -26,7 +26,7 @@ class WorkerTest < DatabaseTest
     configuration = make_configuration do |c|
       c.on(:event_created) { |event| created << event }
     end
-    worker = Worker.new(configuration)
+    worker = Worker.new("test", configuration)
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
     db[:outbox].insert(type: "event_updated", data_after: Sequel.pg_json_wrap({ "foo2" => "bar2" }))
 
@@ -55,7 +55,7 @@ class WorkerTest < DatabaseTest
       c.on(:event_created) { |event| created << event }
       c.on(:event_updated) { |event| updated << event }
     end
-    worker = Worker.new(configuration)
+    worker = Worker.new("test", configuration)
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
     db[:outbox].insert(type: "event_updated", data_before: Sequel.pg_json_wrap({ "foo" => "bar" }),
                        data_after: Sequel.pg_json_wrap({ "foo2" => "bar2" }))
@@ -80,7 +80,7 @@ class WorkerTest < DatabaseTest
       c.wait_for_events_delay 1
       c.on(:event_created) { |event| created << event }
     end
-    worker = Worker.new(configuration)
+    worker = Worker.new("test", configuration)
     worker.finish!
     db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
 
