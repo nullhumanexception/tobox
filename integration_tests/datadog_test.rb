@@ -142,6 +142,6 @@ class DatadogTest < DatabaseTest
   private
 
   def fetcher(&blk)
-    @fetcher ||= Fetcher.new(Configuration.new(&blk))
+    @fetcher ||= Fetcher.new("test", Configuration.new(&blk))
   end
 end if RUBY_VERSION >= "2.4.0"

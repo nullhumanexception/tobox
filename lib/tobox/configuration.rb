@@ -25,6 +25,14 @@ module Tobox
       worker: :thread
     }.freeze
 
+    LOG_FORMAT_PATTERN = "%s, [%s #%d (th: %s)] %5s -- %s: %s\n"
+    DEFAULT_LOG_FORMATTER = Class.new(Logger::Formatter) do
+      def call(severity, time, progname, msg)
+        format(LOG_FORMAT_PATTERN, severity[0, 1], format_datetime(time), Process.pid,
+               Thread.current.name || Thread.current.object_id, severity, progname, msg2str(msg))
+      end
+    end.new
+
     def initialize(name = nil, &block)
       @name = name
       @config = DEFAULT_CONFIGURATION.dup
@@ -46,7 +54,7 @@ module Tobox
       end
 
       env = @config[:environment]
-      @default_logger = @config[:logger] || Logger.new(STDERR) # rubocop:disable Style/GlobalStdStream
+      @default_logger = @config[:logger] || Logger.new(STDERR, formatter: DEFAULT_LOG_FORMATTER) # rubocop:disable Style/GlobalStdStream
       @default_logger.level = @config[:log_level] || (env == "production" ? Logger::INFO : Logger::DEBUG)
 
       freeze
