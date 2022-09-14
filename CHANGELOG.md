@@ -2,6 +2,12 @@
 
 ## [0.1.1] - 2002-09-14
 
+### Bugfixes
+
+Actual fix for foregoing json parsing.
+
+## [0.1.1] - 2002-09-14
+
 ### Chore
 
 Improved default logger, by logging the thread name, as well as providing the worker id in the lifecycle event logs.
