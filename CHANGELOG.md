@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.1.5] - 2002-10-06
+
+### Bugfixes
+
+Fixing datadog plugin name.
+
 ## [0.1.4] - 2002-10-06
 
 ### Bugfixes
