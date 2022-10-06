@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.1.6] - 2002-10-06
+
+### Bugfixes
+
+Allow passing datadog options, initialize tracing from plugin.
+
 ## [0.1.5] - 2002-10-06
 
 ### Bugfixes
