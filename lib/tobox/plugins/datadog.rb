@@ -97,6 +97,6 @@ module Tobox
       end
     end
 
-    register_plugin :datadog, Datadog
+    register_plugin :tobox, Datadog
   end
 end
