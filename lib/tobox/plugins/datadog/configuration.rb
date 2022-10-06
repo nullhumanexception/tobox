@@ -14,7 +14,7 @@ module Datadog
             end
 
             option :analytics_enabled do |o|
-              o.default { env_to_bool("DD_TOBOX_SIDEKIQ_ANALYTICS_ENABLED", false) }
+              o.default { env_to_bool("DD_TOBOX_ANALYTICS_ENABLED", false) }
               o.lazy
             end
 
@@ -24,7 +24,7 @@ module Datadog
             end
 
             option :service_name
-            option :error_handler, default: SpanOperation::Events::DEFAULT_ON_ERROR
+            option :error_handler, default: Tracing::SpanOperation::Events::DEFAULT_ON_ERROR
             option :distributed_tracing, default: false
           end
         end
