@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.1.4] - 2002-10-06
+
+### Bugfixes
+
+Actual fix for missing datadog constants.
+
 ## [0.1.3] - 2002-10-06
 
 ### Bugfixes
