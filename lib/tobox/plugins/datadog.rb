@@ -88,15 +88,19 @@ module Tobox
           require "uri"
         end
 
-        def configure(config)
+        def configure(config, **datadog_options, &blk)
           event_handler = EventHandler.new(config)
           config.on_before_event(&event_handler.method(:on_start))
           config.on_after_event(&event_handler.method(:on_finish))
           config.on_error_event(&event_handler.method(:on_error))
+          ::Datadog.configure do |c|
+            c.tracing.instrument :tobox, datadog_options
+            yield(c) if blk
+          end
         end
       end
     end
 
-    register_plugin :tobox, Datadog
+    register_plugin :datadog, Datadog
   end
 end

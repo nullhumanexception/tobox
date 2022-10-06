@@ -85,7 +85,7 @@ module Tobox
       self
     end
 
-    def plugin(plugin, _options = nil, &block)
+    def plugin(plugin, **options, &block)
       raise Error, "Cannot add a plugin to a frozen config" if frozen?
 
       plugin = Plugins.load_plugin(plugin) if plugin.is_a?(Symbol)
@@ -93,11 +93,11 @@ module Tobox
       return if @plugins.include?(plugin)
 
       @plugins << plugin
-      plugin.load_dependencies(self, &block) if plugin.respond_to?(:load_dependencies)
+      plugin.load_dependencies(self, **options, &block) if plugin.respond_to?(:load_dependencies)
 
       extend(plugin::ConfigurationMethods) if defined?(plugin::ConfigurationMethods)
 
-      plugin.configure(self, &block) if plugin.respond_to?(:configure)
+      plugin.configure(self, **options, &block) if plugin.respond_to?(:configure)
     end
 
     def freeze
