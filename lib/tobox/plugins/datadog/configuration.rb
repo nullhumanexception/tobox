@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "datadog/tracing/contrib/configuration/settings"
+require "datadog/tracing/span_operation"
 
 module Datadog
   module Tracing
