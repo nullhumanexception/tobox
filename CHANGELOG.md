@@ -1,6 +1,12 @@
 ## [Unreleased]
 
-## [0.1.1] - 2002-09-14
+## [0.1.3] - 2002-10-06
+
+### Bugfixes
+
+Datadog constants unproperly namespaced.
+
+## [0.1.2] - 2002-09-14
 
 ### Bugfixes
 
