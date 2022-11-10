@@ -10,15 +10,15 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Transactional outbox pattern implementation in ruby"
   spec.description = "Transactional outbox pattern implementation in ruby"
-  spec.homepage = "https://gitlab.com/honeyryderchuck/tobox"
+  spec.homepage = "https://gitlab.com/os85/tobox"
 
   spec.metadata = {
     "homepage_uri" => spec.homepage,
     "allowed_push_host" => "https://rubygems.org",
-    "source_code_uri" => "https://gitlab.com/honeyryderchuck/tobox",
-    "bug_tracker_uri" => "https://gitlab.com/honeyryderchuck/tobox/issues",
-    "documentation_uri" => "https://gitlab.com/honeyryderchuck/tobox",
-    "changelog_uri" => "https://gitlab.com/honeyryderchuck/tobox/-/blob/master/CHANGELOG.md",
+    "source_code_uri" => "https://gitlab.com/os85/tobox",
+    "bug_tracker_uri" => "https://gitlab.com/os85/tobox/issues",
+    "documentation_uri" => "https://gitlab.com/os85/tobox",
+    "changelog_uri" => "https://gitlab.com/os85/tobox/-/blob/master/CHANGELOG.md",
     "rubygems_mfa_required" => "true"
   }
   spec.required_ruby_version = ">= 2.6.0"

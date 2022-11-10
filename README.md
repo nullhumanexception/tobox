@@ -1,8 +1,8 @@
 # Tobox: Transactional outbox pattern implementation in ruby
 
 [![Gem Version](https://badge.fury.io/rb/tobox.svg)](http://rubygems.org/gems/tobox)
-[![pipeline status](https://gitlab.com/honeyryderchuck/tobox/badges/master/pipeline.svg)](https://gitlab.com/honeyryderchuck/tobox/pipelines?page=1&scope=all&ref=master)
-[![coverage report](https://gitlab.com/honeyryderchuck/tobox/badges/master/coverage.svg?job=coverage)](https://honeyryderchuck.gitlab.io/tobox/#_AllFiles)
+[![pipeline status](https://gitlab.com/os85/tobox/badges/master/pipeline.svg)](https://gitlab.com/os85/tobox/pipelines?page=1&scope=all&ref=master)
+[![coverage report](https://gitlab.com/os85/tobox/badges/master/coverage.svg?job=coverage)](https://os85.gitlab.io/tobox/#_AllFiles)
 
 Simple, data-first events processing framework based on the [transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html).
 
@@ -381,4 +381,4 @@ After checking out the repo, run `bin/setup` to install dependencies. Then, run 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://gitlab.com/honeyryderchuck/tobox.
+Bug reports and pull requests are welcome on GitHub at https://gitlab.com/os85/tobox.
