@@ -6,6 +6,28 @@
 
 Simple, data-first events processing framework based on the [transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html).
 
+<!-- TOC -->
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Event](#event)
+- [Features](#features)
+  - [Ordered event processing](#ordered-event-processing)
+- [Plugins](#plugins)
+  - [Zeitwerk](#zeitwerk)
+  - [Sentry](#sentry)
+  - [Datadog](#datadog)
+- [Supported Rubies](#supported-rubies)
+- [Rails support](#rails-support)
+- [Why?](#why)
+- [Development](#development)
+- [Contributing](#contributing)
+
+<!-- /TOC -->
+
+<a id="markdown-requirements" name="requirements"></a>
 ## Requirements
 
 `tobox` requires integration with RDBMS which supports `SKIP LOCKED` functionality. As of today, that's:
@@ -15,6 +37,7 @@ Simple, data-first events processing framework based on the [transactional outbo
 * Oracle
 * Microsoft SQL Server
 
+<a id="markdown-installation" name="installation"></a>
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -22,7 +45,7 @@ Add this line to your application's Gemfile:
 ```ruby
 gem "tobox"
 
-# You'll also need to aadd the right database client gem for the target RDBMS
+# You'll also need to add the right database client gem for the target RDBMS
 # ex, for postgresql:
 #
 # gem "pg"
@@ -37,6 +60,8 @@ Or install it yourself as:
 
     $ gem install tobox
 
+
+<a id="markdown-usage" name="usage"></a>
 ## Usage
 
 1. create the `outbox` table in your application's database:
@@ -84,7 +109,7 @@ end
 
 3. Start the `tobox` process
 
-```
+```bash
 > bundle exec tobox -C path/to/tobox.rb -r path/to/file_requiring_application_code.rb
 ```
 
@@ -135,11 +160,12 @@ CREATE TRIGGER order_created_outbox_event
   EXECUTE PROCEDURE order_created_outbox_event();
 ```
 
+<a id="markdown-configuration" name="configuration"></a>
 ## Configuration
 
 As mentioned above, configuration can be set in a particular file. The following options are configurable:
 
-### `environment``
+### `environment`
 
 Sets the application environment (either "development" or "production"). Can be set directly, or via `APP_ENV` environment variable (defaults to "development").
 
@@ -257,6 +283,11 @@ Overrides the internal logger (an instance of `Logger`).
 
 Overrides the default log level ("info" when in "production" environment, "debug" otherwise).
 
+### group_column
+
+Defines the column to be used for event grouping, when [ordered processing of events is a requirement](#ordered-event-processing).
+
+<a id="markdown-event" name="event"></a>
 ## Event
 
 The event is composed of the following properties:
@@ -269,20 +300,57 @@ The event is composed of the following properties:
 
 (*NOTE*: The event is also composed of other properties which are only relevant for `tobox`.)
 
-## Rails support
+<a id="markdown-features" name="features"></a>
+## Features
 
-Rails is supported out of the box by adding the [sequel-activerecord_connection](https://github.com/janko/sequel-activerecord_connection) gem into your Gemfile, and requiring the rails application in the `tobox` cli call:
+There are a few extra features you can run on top a "vanilla" transactional outbox implementation. This is how you can accomplish them using `tobox`.
 
-```bash
-> bundle exec tobox -C path/to/tobox.rb -r path/to/rails_app/config/environment.rb
-```
+<a id="markdown-ordered-event-processing" name="ordered-event-processing"></a>
+### Ordered event processing
 
-In the `tobox` config, you can set the environment:
+By default, events are taken and processed from the "outbox" table concurrently by workers, which means that, while worker A may process the most recent event, and worker B takes the following, worker B may process it faster than worker A. This may be an issue if the consumer expects events from a certain context to arrive in a certain order.
+
+One solution is to have a single worker processing the "outbox" events. Another is to use the `group_column` configuration.
+
+What you have to do is:
+
+1. add a "group id" column to the "outbox" table
 
 ```ruby
-environment Rails.env
+create_table(:outbox) do
+  primary_key :id
+  column :group_id, :integer
+  # The type is irrelevant, could also be :string, :uuid...
+  # ..
 ```
 
+2. set the "group_column" configuration
+
+```ruby
+# in your tobox.rb
+group_column :group_id
+index :group_id
+```
+
+3. insert related outbox events with the same group id
+
+```ruby
+order = Order.new(
+  item_id: item.id,
+  price: 20_20,
+  currency: "EUR"
+)
+DB.transaction do
+  order.save
+  DB[:outbox].insert(event_type: "order_created", group_id: order.id, data_after: order.to_hash)
+  DB[:outbox].insert(event_type: "billing_event_started", group_id: order.id, data_after: order.to_hash)
+end
+
+# "order_created" will be processed first
+# "billing_event_created" will only start processing once "order_created" finishes
+```
+
+<a id="markdown-plugins" name="plugins"></a>
 ## Plugins
 
 `tobox` ships with a very simple plugin system. (TODO: add docs).
@@ -296,6 +364,7 @@ plugin(:plugin_name)
 
 It ships with the following integrations.
 
+<a id="markdown-zeitwerk" name="zeitwerk"></a>
 ### Zeitwerk
 
 (requires the `zeitwerk` gem.)
@@ -310,6 +379,7 @@ zeitwerk_loader do |loader|
 end
 ```
 
+<a id="markdown-sentry" name="sentry"></a>
 ### Sentry
 
 (requires the `sentry-ruby` gem.)
@@ -321,6 +391,7 @@ Plugin for the [sentry](https://github.com/getsentry/sentry-ruby) ruby SDK for e
 plugin(:sentry)
 ```
 
+<a id="markdown-datadog" name="datadog"></a>
 ### Datadog
 
 (requires the `ddtrace` gem.)
@@ -337,10 +408,28 @@ end
 plugin(:datadog)
 ```
 
+<a id="markdown-supported-rubies" name="supported-rubies"></a>
 ## Supported Rubies
 
 All Rubies greater or equal to 2.6, and always latest JRuby and Truffleruby.
 
+
+<a id="markdown-rails-support" name="rails-support"></a>
+## Rails support
+
+Rails is supported out of the box by adding the [sequel-activerecord_connection](https://github.com/janko/sequel-activerecord_connection) gem into your Gemfile, and requiring the rails application in the `tobox` cli call:
+
+```bash
+> bundle exec tobox -C path/to/tobox.rb -r path/to/rails_app/config/environment.rb
+```
+
+In the `tobox` config, you can set the environment:
+
+```ruby
+environment Rails.env
+```
+
+<a id="markdown-why" name="why"></a>
 ## Why?
 
 ### Simple and lightweight, framework (and programming language) agnostic
@@ -375,10 +464,12 @@ By using the database as the message broker, `tobox` can rely on good old transa
 
 (The actual processing may change this to "at least once", as issues may happen before the event is successfully deleted from the outbox. Still, "at least once" is acceptable and solvable using idempotency mechanisms).
 
+<a id="markdown-development" name="development"></a>
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
+<a id="markdown-contributing" name="contributing"></a>
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://gitlab.com/os85/tobox.
