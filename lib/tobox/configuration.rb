@@ -17,6 +17,7 @@ module Tobox
       log_level: nil,
       database_uri: nil,
       table: :outbox,
+      group_column: nil,
       max_attempts: 10,
       exponential_retry_factor: 4,
       wait_for_events_delay: 5,

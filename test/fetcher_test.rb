@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class FetcherTest < DatabaseTest
+class FetcherTest < DBTransactionTest
   include Tobox
 
   def test_fetch_events
