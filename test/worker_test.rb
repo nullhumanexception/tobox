@@ -3,7 +3,7 @@
 require "timeout"
 require "test_helper"
 
-class WorkerTest < DatabaseTest
+class WorkerTest < DBTransactionTest
   include Tobox
 
   def test_do_work_sleeps_on_it

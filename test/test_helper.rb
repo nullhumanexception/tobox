@@ -14,6 +14,9 @@ require "json"
 require "logger"
 require "sequel"
 
+Thread.abort_on_exception = true
+Thread.report_on_exception = true
+
 DB = begin
   db = if ENV.key?("DATABASE_URL")
          if RUBY_ENGINE == "jruby"
@@ -76,6 +79,7 @@ DB = begin
   if defined?(Rails)
     ENV.delete("PARALLEL")
   else
+    Sequel::Migrator.run(db, "test/migrate", target: 0)
     Sequel::Migrator.run(db, "test/migrate")
   end
 
@@ -104,13 +108,17 @@ class DatabaseTest < Minitest::Test
 
   private
 
+  def db
+    DB
+  end
+end
+
+class DBTransactionTest < DatabaseTest
+  private
+
   def around
     db.transaction(rollback: :always, savepoint: true, auto_savepoint: true) do
       super
     end
-  end
-
-  def db
-    DB
   end
 end
