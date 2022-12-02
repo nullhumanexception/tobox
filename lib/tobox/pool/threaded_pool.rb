@@ -2,8 +2,6 @@
 
 module Tobox
   class ThreadedPool < Pool
-    class KillError < Interrupt; end
-
     def initialize(_configuration)
       @threads = []
       super

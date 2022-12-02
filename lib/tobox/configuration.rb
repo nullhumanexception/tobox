@@ -81,6 +81,11 @@ module Tobox
       self
     end
 
+    def on_error_worker(&callback)
+      (@lifecycle_events[:error_worker] ||= []) << callback
+      self
+    end
+
     def message_to_arguments(&callback)
       @arguments_handler = callback
       self

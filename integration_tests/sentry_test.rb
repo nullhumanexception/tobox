@@ -79,6 +79,32 @@ class SentryTest < DatabaseTest
     assert event.contexts.dig(:trace, :trace_id) == parent_transaction.trace_id
   end
 
+  def test_sentry_worker_error
+    pool do |c|
+      c.plugin(:sentry)
+    end
+    init_sentry
+
+    worker = Class.new do
+      def work
+        raise "what the hell"
+      end
+    end.new # random object not responding to #work
+
+    error = nil
+    begin
+      pool.do_work(worker)
+    rescue => err
+      error = err
+    end
+
+    transport = Sentry.get_current_client.transport
+
+    # assert transport.events.count == 1
+    event = transport.events.first
+    assert Sentry::Event.get_message_from_exception(event.to_hash).end_with?("what the hell")
+  end
+
   private
 
   def init_sentry
@@ -94,5 +120,11 @@ class SentryTest < DatabaseTest
 
   def fetcher(&blk)
     @fetcher ||= Fetcher.new("test", Configuration.new(&blk))
+  end
+
+  def pool(&blk)
+    @pool ||= Class.new(Pool) do
+      def start; end
+    end.new(Configuration.new(&blk))
   end
 end if RUBY_VERSION >= "2.4.0"

@@ -5,8 +5,6 @@ require "fiber_scheduler"
 
 module Tobox
   class FiberPool < Pool
-    class KillError < Interrupt; end
-
     def initialize(_configuration)
       Sequel.extension(:fiber_concurrency)
       super

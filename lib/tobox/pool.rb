@@ -10,7 +10,7 @@ module Tobox
       @workers = Array.new(@num_workers) do |idx|
         Worker.new("tobox-worker-#{idx}", configuration)
       end
-      @error_handlers = Array(@configuration.lifecycle_events[:error])
+      @worker_error_handlers = Array(@configuration.lifecycle_events[:error_worker])
       start
     end
 
@@ -22,9 +22,9 @@ module Tobox
       wrk.work
     rescue KillError
     # noop
-    rescue Exception => e # rubocop:disable Lint/RescueException
-      @error_handlers.each { |hd| hd.call(:tobox_error, e) }
-      raise e
+    rescue Exception => error # rubocop:disable Lint/RescueException
+      @worker_error_handlers.each { |hd| hd.call(error) }
+      raise error
     end
   end
 

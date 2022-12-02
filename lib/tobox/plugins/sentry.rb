@@ -130,6 +130,10 @@ module Tobox
           config.on_after_event(&event_handler.method(:on_finish))
           config.on_error_event(&event_handler.method(:on_error))
 
+          config.on_error_worker do |error|
+            ::Sentry.capture_exception(error, hint: { background: false })
+          end
+
           ::Sentry::Configuration.attr_reader(:tobox)
           ::Sentry::Configuration.add_post_initialization_callback do
             @tobox = Plugins::Sentry::Configuration.new
