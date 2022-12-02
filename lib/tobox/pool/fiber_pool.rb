@@ -10,7 +10,6 @@ module Tobox
     def initialize(_configuration)
       Sequel.extension(:fiber_concurrency)
       super
-      @error_handlers = Array(@configuration.lifecycle_events[:error])
     end
 
     def start
@@ -19,14 +18,7 @@ module Tobox
 
         FiberScheduler do
           @workers.each_with_index do |wk, _idx|
-            Fiber.schedule do
-              wk.work
-            rescue KillError
-              # noop
-            rescue Exception => e # rubocop:disable Lint/RescueException
-              @error_handlers.each { |hd| hd.call(:tobox_error, e) }
-              raise e
-            end
+            Fiber.schedule { do_work(wk) }
           end
         end
       end

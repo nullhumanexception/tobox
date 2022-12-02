@@ -7,7 +7,6 @@ module Tobox
     def initialize(_configuration)
       @threads = []
       super
-      @error_handlers = Array(@configuration.lifecycle_events[:error])
     end
 
     def start
@@ -15,14 +14,7 @@ module Tobox
         th = Thread.start do
           Thread.current.name = "tobox-worker-#{idx}"
 
-          begin
-            wk.work
-          rescue KillError
-            # noop
-          rescue Exception => e # rubocop:disable Lint/RescueException
-            @error_handlers.each { |hd| hd.call(:tobox_error, e) }
-            raise e
-          end
+          do_work(wk)
 
           @threads.delete(Thread.current)
         end
