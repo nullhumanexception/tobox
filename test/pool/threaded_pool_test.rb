@@ -27,6 +27,30 @@ class ThreadedPoolTest < Minitest::Test
     assert pool.instance_variable_get(:@threads).size.zero?
   end
 
+  def test_pool_kill_parent_when_worker_stop
+    pool do |c|
+      c.concurrency 2
+    end
+    pool.instance_variable_get(:@workers).each do |wk|
+      wk.instance_eval do
+        def work
+          sleep(1)
+          raise StandardError, "what the hell"
+        end
+      end
+    end
+
+    assert("what the hell", Thread.start do
+      pool.instance_variable_set(:@parent_thread, Thread.current)
+      pool.start
+      begin
+        sleep(3)
+      rescue Interrupt => e
+        e.message
+      end
+    end.value)
+  end
+
   private
 
   def pool

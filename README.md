@@ -254,6 +254,15 @@ callback executed when an exception was raised while processing an event.
 on_error_event { |event, exception| Sentry.capture_exception(exception) }
 ```
 
+### `on_error_worker { |error| }`
+
+callback executed when an exception was raised in the worker, before processing events.
+
+
+```ruby
+on_error_worker { |exception| Sentry.capture_exception(exception) }
+```
+
 ### `message_to_arguments { |event| }`
 
 if exposing raw data to the `on` handlers is not what you'd want, you can always override the behaviour by providing an alternative "before/after fetcher" implementation.

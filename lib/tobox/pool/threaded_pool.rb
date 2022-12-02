@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
+require "monitor"
+
 module Tobox
   class ThreadedPool < Pool
     def initialize(_configuration)
+      @parent_thread = Thread.main
       @threads = []
+      @threads.extend(MonitorMixin)
       super
     end
 
@@ -14,9 +18,16 @@ module Tobox
 
           do_work(wk)
 
-          @threads.delete(Thread.current)
+          @threads.synchronize do
+            @threads.delete(Thread.current)
+
+            # all workers went down abruply, we need to kill the process.
+            @parent_thread.raise(Interrupt) if wk.finished? && @threads.empty? && @running
+          end
         end
-        @threads << th
+        @threads.synchronize do
+          @threads << th
+        end
       end
     end
 

@@ -85,11 +85,11 @@ class SentryTest < DatabaseTest
     end
     init_sentry
 
-    worker = Class.new do
+    worker = Class.new(Worker) do
       def work
         raise "what the hell"
       end
-    end.new # random object not responding to #work
+    end.new("test", pool.instance_variable_get(:@configuration)) # random object not responding to #work
 
     error = nil
     begin
