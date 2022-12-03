@@ -61,8 +61,10 @@ module Tobox
       freeze
     end
 
-    def on(event, &callback)
-      (@handlers[event.to_sym] ||= []) << callback
+    def on(*events, &callback)
+      events.each do |event|
+        (@handlers[event.to_sym] ||= []) << callback
+      end
       self
     end
 

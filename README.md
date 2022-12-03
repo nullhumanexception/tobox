@@ -105,6 +105,9 @@ end
 on("user_updated") do |event|
   # ...
 end
+on("user_created", "user_updated") do |event|
+  # ...
+end
 ```
 
 3. Start the `tobox` process
