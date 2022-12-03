@@ -1,5 +1,39 @@
 ## [Unreleased]
 
+### Features
+
+#### Ordered event processing
+
+When the outbox table contains a `:group_id` table (and the producer fills up events with it), then a group of events with the same `:group_id` will be processed one by one, by order of insertion.
+
+```ruby
+# migration
+create_table(:outbox) do
+  column :message_group_id, :integer
+
+# tobox.rb
+message_group_column :group_id
+
+# event production
+DB[:outbox].insert(event_type: "order_created", message_group_id: order.id, ....
+DB[:outbox].insert(event_type: "billing_event_started", message_group_id: order.id, ....
+
+# order_created handled first, billing_event_started only after
+```
+
+#### on_error_worker callback
+
+The config option `on_error_worker { |error| }` gets called when an error happens in a worker **before** events are processed (p.ex. when the database connection becomes unhealthy). You can use it to report such errors to an error reporting system (the `sentry` plugin relies on it).
+
+```ruby
+# tobox.rb
+on_error_worker { |error| Sentry.capture_exception(error, hint: { background: false }) }
+```
+
+### Bugfixes
+
+When errors happen which bring down the workers (such as database becoming unresponsive), the last worker will bring the process down. This will allow systems to restart the service, which should bring it back to an healthy state.
+
 ## [0.1.6] - 2002-10-06
 
 ### Bugfixes

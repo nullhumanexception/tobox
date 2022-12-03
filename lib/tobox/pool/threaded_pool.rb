@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
+require "monitor"
+
 module Tobox
   class ThreadedPool < Pool
-    class KillError < Interrupt; end
-
     def initialize(_configuration)
+      @parent_thread = Thread.main
       @threads = []
+      @threads.extend(MonitorMixin)
       super
-      @error_handlers = Array(@configuration.lifecycle_events[:error])
     end
 
     def start
@@ -15,18 +16,18 @@ module Tobox
         th = Thread.start do
           Thread.current.name = "tobox-worker-#{idx}"
 
-          begin
-            wk.work
-          rescue KillError
-            # noop
-          rescue Exception => e # rubocop:disable Lint/RescueException
-            @error_handlers.each { |hd| hd.call(:tobox_error, e) }
-            raise e
-          end
+          do_work(wk)
 
-          @threads.delete(Thread.current)
+          @threads.synchronize do
+            @threads.delete(Thread.current)
+
+            # all workers went down abruply, we need to kill the process.
+            @parent_thread.raise(Interrupt) if wk.finished? && @threads.empty? && @running
+          end
         end
-        @threads << th
+        @threads.synchronize do
+          @threads << th
+        end
       end
     end
 

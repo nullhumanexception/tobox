@@ -105,6 +105,9 @@ end
 on("user_updated") do |event|
   # ...
 end
+on("user_created", "user_updated") do |event|
+  # ...
+end
 ```
 
 3. Start the `tobox` process
@@ -252,6 +255,15 @@ callback executed when an exception was raised while processing an event.
 
 ```ruby
 on_error_event { |event, exception| Sentry.capture_exception(exception) }
+```
+
+### `on_error_worker { |error| }`
+
+callback executed when an exception was raised in the worker, before processing events.
+
+
+```ruby
+on_error_worker { |exception| Sentry.capture_exception(exception) }
 ```
 
 ### `message_to_arguments { |event| }`

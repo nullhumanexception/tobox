@@ -2,7 +2,10 @@
 
 module Tobox
   class Worker
+    attr_reader :label
+
     def initialize(label, configuration)
+      @label = label
       @wait_for_events_delay = configuration[:wait_for_events_delay]
       @handlers = configuration.handlers || {}
       @fetcher = Fetcher.new(label, configuration)
@@ -11,6 +14,10 @@ module Tobox
       return unless (message_to_arguments = configuration.arguments_handler)
 
       define_singleton_method(:message_to_arguments, &message_to_arguments)
+    end
+
+    def finished?
+      @finished
     end
 
     def finish!

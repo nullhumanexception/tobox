@@ -61,8 +61,10 @@ module Tobox
       freeze
     end
 
-    def on(event, &callback)
-      (@handlers[event.to_sym] ||= []) << callback
+    def on(*events, &callback)
+      events.each do |event|
+        (@handlers[event.to_sym] ||= []) << callback
+      end
       self
     end
 
@@ -78,6 +80,11 @@ module Tobox
 
     def on_error_event(&callback)
       (@lifecycle_events[:error_event] ||= []) << callback
+      self
+    end
+
+    def on_error_worker(&callback)
+      (@lifecycle_events[:error_worker] ||= []) << callback
       self
     end
 
