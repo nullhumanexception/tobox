@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.2.0] - 2022-12-05
+
 ### Features
 
 #### Ordered event processing
@@ -34,37 +36,37 @@ on_error_worker { |error| Sentry.capture_exception(error, hint: { background: fa
 
 Thread workers: when errors happen which bring down the workers (such as database becoming unresponsive), workers will be restarted.
 
-## [0.1.6] - 2002-10-06
+## [0.1.6] - 2022-10-06
 
 ### Bugfixes
 
 Allow passing datadog options, initialize tracing from plugin.
 
-## [0.1.5] - 2002-10-06
+## [0.1.5] - 2022-10-06
 
 ### Bugfixes
 
 Fixing datadog plugin name.
 
-## [0.1.4] - 2002-10-06
+## [0.1.4] - 2022-10-06
 
 ### Bugfixes
 
 Actual fix for missing datadog constants.
 
-## [0.1.3] - 2002-10-06
+## [0.1.3] - 2022-10-06
 
 ### Bugfixes
 
 Datadog constants unproperly namespaced.
 
-## [0.1.2] - 2002-09-14
+## [0.1.2] - 2022-09-14
 
 ### Bugfixes
 
 Actual fix for foregoing json parsing.
 
-## [0.1.1] - 2002-09-14
+## [0.1.1] - 2022-09-14
 
 ### Chore
 
