@@ -24,6 +24,9 @@ module Tobox
 
       max_attempts = configuration[:max_attempts]
 
+      @inbox_table = configuration[:inbox_table]
+      @inbox_column = configuration[:inbox_column]
+
       @ds = @db[@table]
 
       run_at_conds = [
@@ -80,14 +83,17 @@ module Tobox
             if blk
               num_events = events.size
 
-              events.each do |ev|
-                ev[:metadata] = try_json_parse(ev[:metadata])
-                handle_before_event(ev)
-                yield(to_message(ev))
+              events.map! do |ev|
+                try_insert_inbox(ev) do
+                  ev[:metadata] = try_json_parse(ev[:metadata])
+                  handle_before_event(ev)
+                  yield(to_message(ev))
+                  ev
+                end
               rescue StandardError => e
                 error = e
                 raise Sequel::Rollback
-              end
+              end.compact!
             else
               events.map!(&method(:to_message))
             end
@@ -146,6 +152,16 @@ module Tobox
       data = JSON.parse(data.to_s) unless data.respond_to?(:to_hash)
 
       data
+    end
+
+    def try_insert_inbox(event)
+      return yield unless @inbox_table && @inbox_column
+
+      ret = @db[@inbox_table].insert_conflict.insert(@inbox_column => event[@inbox_column])
+
+      return unless ret
+
+      yield
     end
 
     def handle_before_event(event)
