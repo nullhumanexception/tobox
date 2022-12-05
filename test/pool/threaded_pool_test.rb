@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "timeout"
 require "test_helper"
 
 class ThreadedPoolTest < Minitest::Test
