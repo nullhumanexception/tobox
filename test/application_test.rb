@@ -12,8 +12,11 @@ class ApplicationTest < Minitest::Test
 
       def initialize(_cfg)
         @commands = []
-        @commands << :start
         super()
+      end
+
+      def start
+        @commands << :start
       end
 
       def stop

@@ -13,7 +13,6 @@ module Tobox
       end
       @worker_error_handlers = Array(@configuration.lifecycle_events[:error_worker])
       @running = true
-      start
     end
 
     def stop

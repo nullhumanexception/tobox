@@ -11,7 +11,7 @@ class FiberPoolTest < Minitest::Test
     pool do |c|
       c.concurrency 2
       c.shutdown_timeout 1
-    end
+    end.start
     thread = pool.instance_variable_get(:@fiber_thread)
     assert thread.status != false
     pool.stop
@@ -27,7 +27,6 @@ class FiberPoolTest < Minitest::Test
         c.worker :fiber
       end
       app = Application.new(conf)
-      app.start
       app.instance_variable_get(:@pool)
     end
   end
