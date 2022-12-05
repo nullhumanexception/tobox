@@ -32,7 +32,7 @@ on_error_worker { |error| Sentry.capture_exception(error, hint: { background: fa
 
 ### Bugfixes
 
-When errors happen which bring down the workers (such as database becoming unresponsive), the last worker will bring the process down. This will allow systems to restart the service, which should bring it back to an healthy state.
+Thread workers: when errors happen which bring down the workers (such as database becoming unresponsive), workers will be restarted.
 
 ## [0.1.6] - 2002-10-06
 

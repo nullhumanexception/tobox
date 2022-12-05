@@ -5,10 +5,6 @@ module Tobox
     def initialize(configuration)
       @configuration = configuration
       @running = false
-    end
-
-    def start
-      return if @running
 
       worker = @configuration[:worker]
 
@@ -17,7 +13,12 @@ module Tobox
               when :fiber then FiberPool
               else worker
               end.new(@configuration)
+    end
 
+    def start
+      return if @running
+
+      @pool.start
       @running = true
     end
 

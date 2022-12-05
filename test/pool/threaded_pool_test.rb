@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "timeout"
 require "test_helper"
 
 class ThreadedPoolTest < Minitest::Test
@@ -10,9 +11,9 @@ class ThreadedPoolTest < Minitest::Test
     pool do |c|
       c.concurrency 2
       c.shutdown_timeout 1
-    end
+    end.start
 
-    threads = pool.instance_variable_get(:@threads)
+    threads = pool.threads
     assert threads.size == 2
     assert(threads.all?(Thread))
   end
@@ -21,17 +22,21 @@ class ThreadedPoolTest < Minitest::Test
     pool do |c|
       c.concurrency 2
       c.shutdown_timeout 1
-    end
-    assert pool.instance_variable_get(:@threads).size == 2
+    end.start
+
+    assert pool.threads.size == 2
     pool.stop
-    assert pool.instance_variable_get(:@threads).size.zero?
+    assert pool.threads.size.zero?
   end
 
   def test_pool_kill_parent_when_worker_stop
     pool do |c|
       c.concurrency 2
     end
-    pool.instance_variable_get(:@workers).each do |wk|
+
+    workers = pool.workers.dup
+
+    workers.each do |wk|
       wk.instance_eval do
         def work
           sleep(1)
@@ -40,15 +45,29 @@ class ThreadedPoolTest < Minitest::Test
       end
     end
 
-    assert("what the hell", Thread.start do
-      pool.instance_variable_set(:@parent_thread, Thread.current)
+    begin
       pool.start
-      begin
-        sleep(3)
-      rescue Interrupt => e
-        e.message
+      Timeout.timeout(5) do
+        sleep(0.5) until (workers - pool.workers).size == 2
+
+        assert pool.workers.size == 2
+        assert pool.threads.size == 2
       end
-    end.value)
+    rescue Timeout::Error
+      raise "pool didn't cleanly run"
+    ensure
+      pool.stop
+    end
+
+    # assert("what the hell", Thread.start do
+    #   pool.instance_variable_set(:@parent_thread, Thread.current)
+    #   pool.start
+    #   begin
+    #     sleep(3)
+    #   rescue Interrupt => e
+    #     e.message
+    #   end
+    # end.value)
   end
 
   private
@@ -60,8 +79,11 @@ class ThreadedPoolTest < Minitest::Test
         c.worker :thread
       end
       app = Application.new(conf)
-      app.start
-      app.instance_variable_get(:@pool)
+      pool = app.instance_variable_get(:@pool)
+      pool.singleton_class.class_eval do
+        attr_reader :workers, :threads
+      end
+      pool
     end
   end
 end
