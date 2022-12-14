@@ -18,6 +18,8 @@ module Tobox
       database_uri: nil,
       table: :outbox,
       group_column: nil,
+      inbox_table: nil,
+      inbox_column: nil,
       max_attempts: 10,
       exponential_retry_factor: 4,
       wait_for_events_delay: 5,
