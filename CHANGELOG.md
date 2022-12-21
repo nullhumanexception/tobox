@@ -1,5 +1,32 @@
 ## [Unreleased]
 
+## [0.3.0] - 2022-12-12
+
+### Features
+
+#### Inbox
+
+Implementation of the "inbox pattern", which ensures that events are processed to completion only once.
+
+```ruby
+# create an inbox table and reference it
+create_table(:inbox) do
+  column :id, :varchar, null: true, primary_key: true
+  # ...
+create_table(:outbox) do
+  column :inbox_id, :varchar
+  foreign_key :inbox_id, :inbox
+  # ...
+
+# tobox.rb
+inbox_table :inbox
+inbox_column :inbox_id
+
+# event production
+DB[:outbox].insert(event_type: "order_created", inbox_id: "order_created_#{order.id}", ....
+DB[:outbox].insert(event_type: "billing_event_started", inbox_id: "billing_event_started_#{order.id}", ....
+```
+
 ## [0.2.0] - 2022-12-05
 
 ### Features

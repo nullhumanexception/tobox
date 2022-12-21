@@ -15,6 +15,7 @@ Simple, data-first events processing framework based on the [transactional outbo
 - [Event](#event)
 - [Features](#features)
   - [Ordered event processing](#ordered-event-processing)
+  - [Inbox](#inbox)
 - [Plugins](#plugins)
   - [Zeitwerk](#zeitwerk)
   - [Sentry](#sentry)
@@ -299,6 +300,14 @@ Overrides the default log level ("info" when in "production" environment, "debug
 
 Defines the column to be used for event grouping, when [ordered processing of events is a requirement](#ordered-event-processing).
 
+### inbox table
+
+Defines the name of the table to be used for inbox, when [inbox usage is a requirement](#inbox).
+
+### inbox column
+
+Defines the column in the outbox table which references the inbox table, when one is set.
+
 <a id="markdown-event" name="event"></a>
 ## Event
 
@@ -361,6 +370,59 @@ end
 # "order_created" will be processed first
 # "billing_event_created" will only start processing once "order_created" finishes
 ```
+<a id="inbox" name="inbox"></a>
+### Inbox
+
+`tobox` also supports the [inbox pattern](https://event-driven.io/en/outbox_inbox_patterns_and_delivery_guarantees_explained/), to ensure "exactly-once" processing of events. This is achieved by "tagging" events with a unique identifier, and registering them in the inbox before processing (and if they're there, ignoring it altogether).
+
+In order to do so, you'll have to:
+
+1. add an "inbox" table in the database
+
+```ruby
+create_table(:inbox) do
+  column :inbox_id, :varchar, null: true, primary_key: true # it can also be a uuid, you decide
+  column :created_at, "timestamp without time zone", null: false, default: Sequel::CURRENT_TIMESTAMP
+end
+```
+
+2. add the unique id reference in the outbox table:
+
+```ruby
+create_table(:outbox) do
+  primary_key :id
+  column :type, :varchar, null: false
+  column :inbox_id, :varchar, null: true
+  # ...
+  foreign_key :inbox_id, :inbox
+```
+
+3. reference them in the configuration
+
+```ruby
+# tobox.rb
+inbox_table :inbox
+inbox_column :inbox_id
+```
+
+4. insert related outbox events with an inbox id
+
+```ruby
+order = Order.new(
+  item_id: item.id,
+  price: 20_20,
+  currency: "EUR"
+)
+DB.transaction do
+  order.save
+  DB[:outbox].insert(event_type: "order_created", inbox_id: "ord_crt_#{order.id}", data_after: order.to_hash)
+  DB[:outbox].insert(event_type: "billing_event_started", inbox_id: "bil_evt_std_#{order.id}", data_after: order.to_hash)
+end
+
+# assuming this bit above runs two times in two separate workers, each will be processed by tobox only once.
+```
+
+**NOTE**: make sure you keep cleaning the inbox periodically from older messages, once there's no more danger of receiving them again.
 
 <a id="markdown-plugins" name="plugins"></a>
 ## Plugins
