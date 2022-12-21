@@ -49,7 +49,7 @@ jruby:
   before_script:
     - *install_deps
     - *before_script
-  image: "jruby:9.3"
+  image: "jruby:9.4"
   script:
     - *test
   artifacts:
