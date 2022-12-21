@@ -21,12 +21,10 @@ gem "ddtrace", require: false
 gem "sentry-ruby", require: false
 gem "zeitwerk", require: false
 
-if RUBY_VERSION >= "3.1.0"
-  gem "debug"
-  gem "fiber_scheduler"
-end
+gem "fiber_scheduler" if RUBY_VERSION >= "3.1.0"
 
 platform :mri, :truffleruby do
+  gem "debug" if RUBY_VERSION >= "3.1.0"
   if RUBY_VERSION >= "3.0.0"
     gem "rbs"
     gem "steep"
