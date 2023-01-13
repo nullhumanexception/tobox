@@ -124,7 +124,7 @@ module Tobox
     def method_missing(meth, *args, &block)
       if DEFAULT_CONFIGURATION.key?(meth) && args.size == 1
         @config[meth] = args.first
-      elsif /\Aon_(.*)\z/.match(meth) && args.size.zero?
+      elsif /\Aon_(.*)\z/.match(meth) && args.empty?
         on(Regexp.last_match(1).to_sym, &block)
       else
         super

@@ -64,7 +64,7 @@ class FetcherTest < DBTransactionTest
     assert event[:last_error].start_with?("testing123")
     assert error.message == "testing123"
 
-    assert fetcher.fetch_events.size.zero?
+    assert fetcher.fetch_events.empty?
   end
 
   private
