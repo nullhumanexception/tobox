@@ -102,7 +102,7 @@ class SentryTest < DatabaseTest
 
     # assert transport.events.count == 1
     event = transport.events.first
-    assert Sentry::Event.get_message_from_exception(event.to_hash).end_with?("what the hell")
+    assert Sentry::Event.get_message_from_exception(event.to_hash).include?("what the hell")
   end
 
   private

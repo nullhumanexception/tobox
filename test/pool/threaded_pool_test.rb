@@ -26,7 +26,7 @@ class ThreadedPoolTest < Minitest::Test
 
     assert pool.threads.size == 2
     pool.stop
-    assert pool.threads.size.zero?
+    assert pool.threads.empty?
   end
 
   def test_pool_kill_parent_when_worker_stop
