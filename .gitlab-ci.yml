@@ -118,6 +118,21 @@ ruby31:
   artifacts:
     paths:
       - "coverage/"
+ruby32:
+  <<: *test_services
+  before_script:
+    - *install_deps
+    - *before_script
+  image: "ruby:3.2"
+  script:
+    - *test
+    - "COVERAGE_KEY=$RUBY_ENGINE-$RUBY_VERSION-integration-tests DATABASE_URL=postgresql://tobox:password@postgres/tobox bundle exec rake integration_tests"
+    - bundle exec rbs -rforwardable -rlogger -roptparse -ruri -rforwardable -rtimeout -rmonitor -rjson -rfiber test --target "Tobox*" rake test
+    - bundle exec rake rubocop
+  artifacts:
+    paths:
+      - "coverage/"
+
 
 coverage:
   stage: prepare
@@ -129,7 +144,7 @@ coverage:
     - truffleruby
     - ruby26
     - ruby31
-  image: "ruby:3.1"
+  image: "ruby:3.2"
   script:
     # this is a workaround, because simplecov doesn't support relative paths.
     #
