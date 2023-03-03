@@ -74,11 +74,11 @@ module Tobox
         def on_error(event, error)
           return unless ::Sentry.initialized?
 
+          capture_exception(event, error)
+
           transaction = retrieve_transaction(event)
 
           return unless transaction
-
-          capture_exception(event, error)
 
           finish_transaction(transaction, 500)
         end
