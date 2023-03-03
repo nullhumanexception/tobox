@@ -80,6 +80,16 @@ module Tobox
       self
     end
 
+    def on_start(&callback)
+      (@lifecycle_events[:on_start] ||= []) << callback
+      self
+    end
+
+    def on_stop(&callback)
+      (@lifecycle_events[:on_stop] ||= []) << callback
+      self
+    end
+
     def on_before_event(&callback)
       (@lifecycle_events[:before_event] ||= []) << callback
       self
