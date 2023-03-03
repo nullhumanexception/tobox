@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.3.1] - 2022-03-03
+
+### Bugfixes
+
+In Sentry plugin, exception capturing is no longer dependent on transaction monitoring being enabled (if `traces_sampling_rate` would be set to 0, exceptions wouldn't be capture; now they are).
+
 ## [0.3.0] - 2022-12-12
 
 ### Features
