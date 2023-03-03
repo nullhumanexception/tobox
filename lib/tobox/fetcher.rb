@@ -10,13 +10,7 @@ module Tobox
 
       @logger = @configuration.default_logger
 
-      database_uri = @configuration[:database_uri]
-      @db = database_uri ? Sequel.connect(database_uri.to_s) : Sequel::DATABASES.first
-      raise Error, "no database found" unless @db
-
-      @db.extension :date_arithmetic
-
-      @db.loggers << @logger unless @configuration[:environment] == "production"
+      @db = configuration.database
 
       @table = configuration[:table]
       @group_column = configuration[:group_column]

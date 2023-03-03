@@ -7,7 +7,7 @@ module Tobox
   class Configuration
     extend Forwardable
 
-    attr_reader :handlers, :lifecycle_events, :arguments_handler, :default_logger
+    attr_reader :handlers, :lifecycle_events, :arguments_handler, :default_logger, :database
 
     def_delegator :@config, :[]
 
@@ -59,6 +59,16 @@ module Tobox
       env = @config[:environment]
       @default_logger = @config[:logger] || Logger.new(STDERR, formatter: DEFAULT_LOG_FORMATTER) # rubocop:disable Style/GlobalStdStream
       @default_logger.level = @config[:log_level] || (env == "production" ? Logger::INFO : Logger::DEBUG)
+
+      @database = @config[:database_uri] ? Sequel.connect(@config[:database_uri].to_s) : Sequel::DATABASES.first
+      raise Error, "no database found" unless @database
+
+      if @database.frozen?
+        raise "#{@database} must have the :date_arithmetic extension loaded" unless Sequel.respond_to?(:date_add)
+      else
+        @database.extension :date_arithmetic
+        @database.loggers << @default_logger unless @config[:environment] == "production"
+      end
 
       freeze
     end
@@ -116,6 +126,7 @@ module Tobox
       @handlers.each_value(&:freeze).freeze
       @lifecycle_events.each_value(&:freeze).freeze
       @plugins.freeze
+      @database.freeze
       super
     end
 
