@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+
+## [0.3.2] - 2022-03-06
+
+### Bugfixes
+
+* allow sentry error capture if `report_after_retries` option is turned off.
+
 ## [0.3.1] - 2022-03-03
 
 ### Bugfixes
