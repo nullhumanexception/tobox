@@ -109,7 +109,9 @@ module Tobox
         end
 
         def capture_exception(event, error)
-          return unless ::Sentry.configuration.tobox.report_after_retries && event[:attempts] >= @max_attempts
+          if ::Sentry.configuration.tobox.report_after_retries && event[:attempts] && event[:attempts] < @max_attempts
+            return
+          end
 
           ::Sentry.capture_exception(
             error,
