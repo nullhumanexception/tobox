@@ -31,7 +31,7 @@ class SentryTest < DatabaseTest
 
   def test_sentry_process_error
     fetcher do |c|
-      c.max_attempts 1
+      c.max_attempts 2
       c.plugin(:sentry)
     end
     init_sentry
@@ -47,11 +47,42 @@ class SentryTest < DatabaseTest
     assert return_value == 1
     transport = Sentry.get_current_client.transport
 
-    # assert transport.events.count == 1
+    event = transport.events.first
+    assert event.tags[:event_type] == "event_created"
+    assert Sentry::Event.get_message_from_exception(event.to_hash).nil?
+
+    sleep 1.5
+    return_value = fetcher.fetch_events { |_|
+      raise transient_error, "make it fail"
+    }
+    assert return_value == 1
+
+    event = transport.events[1]
+    assert event.tags[:event_type] == "event_created"
+    assert Sentry::Event.get_message_from_exception(event.to_hash).end_with?("make it fail")
+  end
+
+  def test_sentry_process_error_report_immediately
+    fetcher do |c|
+      c.max_attempts 2
+      c.plugin(:sentry)
+    end
+    init_sentry
+    Sentry.configuration.tobox.report_after_retries = false
+
+    # with event
+    db[:outbox].insert(type: "event_created", data_after: Sequel.pg_json_wrap({ "foo" => "bar" }))
+
+    transient_error = Class.new(StandardError)
+    return_value = fetcher.fetch_events { |_|
+      raise transient_error, "make it fail"
+    }
+    assert return_value == 1
+    transport = Sentry.get_current_client.transport
+
     event = transport.events.first
     assert event.tags[:event_type] == "event_created"
     assert Sentry::Event.get_message_from_exception(event.to_hash).end_with?("make it fail")
-
   end
 
   def test_sentry_process_sentry_metadata
