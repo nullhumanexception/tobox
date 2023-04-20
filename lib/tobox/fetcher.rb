@@ -36,7 +36,8 @@ module Tobox
 
       @pick_next_sql = @ds.where(Sequel[@table][:attempts] < max_attempts) # filter out exhausted attempts
                           .where(run_at_conds)
-                          .order(Sequel.desc(:run_at, nulls: :first), :id)
+                          # .order(Sequel.desc(:run_at, nulls: :first), :id)
+                          .order(:id)
 
       @before_event_handlers = Array(@configuration.lifecycle_events[:before_event])
       @after_event_handlers = Array(@configuration.lifecycle_events[:after_event])
@@ -56,7 +57,8 @@ module Tobox
           total_from_group = @ds.where(@group_column => group).count
 
           event_ids = @ds.where(@group_column => group)
-                         .order(Sequel.desc(:run_at, nulls: :first), :id)
+                        #  .order(Sequel.desc(:run_at, nulls: :first), :id)
+                         .order(:id)
                          .for_update.skip_locked.select_map(:id)
 
           if event_ids.size != total_from_group
