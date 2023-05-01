@@ -18,14 +18,14 @@ module Tobox
     def run
       options = @options
 
+      # boot
+      options.fetch(:require).each(&method(:require))
+
       config = Configuration.new do |c|
         c.instance_eval(File.read(options.fetch(:config_file)), options.fetch(:config_file), 1)
       end
 
       logger = config.default_logger
-
-      # boot
-      options.fetch(:require).each(&method(:require))
 
       # signals
       pipe_read, pipe_write = IO.pipe

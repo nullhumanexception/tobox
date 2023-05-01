@@ -30,16 +30,16 @@ module Tobox
 
           scope = ::Sentry.get_current_scope
 
-          scope.set_contexts(
-            id: event[:id],
-            type: event[:type],
-            attempts: event[:attempts],
-            created_at: event[:created_at],
-            run_at: event[:run_at],
-            last_error: event[:last_error]&.byteslice(0..1000),
-            version: Tobox::VERSION,
-            db_adapter: @db_scheme
-          )
+          scope.set_contexts(tobox: {
+                               id: event[:id],
+                               type: event[:type],
+                               attempts: event[:attempts],
+                               created_at: event[:created_at],
+                               run_at: event[:run_at],
+                               last_error: event[:last_error]&.byteslice(0..1000),
+                               version: Tobox::VERSION,
+                               db_adapter: @db_scheme
+                             })
           scope.set_tags(
             outbox: @db_table,
             event_id: event[:id],
