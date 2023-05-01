@@ -31,7 +31,6 @@ variables:
   BUNDLE_JOBS: 10
   BUNDLE_PATH: vendor
   CI: 1
-  PARALLEL: 1
   # Postgres
   POSTGRES_DB: tobox
   POSTGRES_USER: tobox
