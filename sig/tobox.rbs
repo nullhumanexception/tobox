@@ -5,4 +5,10 @@ module Tobox
   type event = Hash[Symbol, untyped]
   type event_handler = ^(event event) -> void
   type lifecycle_handler = ^(event event, *untyped) -> void
+
+  module Plugins
+    def self?.load_plugin: (Symbol name) -> Module
+
+    def self?.register_plugin: (Symbol name, Module mod) -> void
+  end
 end
